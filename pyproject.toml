@@ -1,0 +1,11 @@
+[project]
+name = "workflows-acp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "agent-client-protocol>=0.7.1",
+    "google-genai>=1.56.0",
+    "llama-index-workflows>=2.11.6",
+]
