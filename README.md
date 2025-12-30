@@ -20,6 +20,12 @@ wfacp --help
 
 ## Usage
 
+In order to use the CLI and python API, you need a `GOOGLE_API_KEY` set in your environment:
+
+```bash
+export GOOGLE_API_KEY="my-api-key"
+```
+
 ### CLI
 
 In order to use the CLI agent, you need to provide an `agent_config.yaml` file, containing the following fields:
