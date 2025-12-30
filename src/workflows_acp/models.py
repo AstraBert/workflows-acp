@@ -2,7 +2,7 @@ import inspect
 
 from pydantic import BaseModel, Field
 from typing import Literal, Any, Callable, TypedDict, NotRequired, TypeVar
-from .events import ThinkingEvent, ObservationEvent, ToolCallEvent, OutputEvent, AskHumanEvent, ToolPermissionEvent
+from .events import ThinkingEvent, ToolCallEvent, OutputEvent, AskHumanEvent, ToolPermissionEvent, PromptEvent
 
 ActionType = Literal["tool_call", "stop", "ask_human"]
 StructuredSchemaT = TypeVar("StructuredSchemaT", bound=BaseModel)
@@ -18,8 +18,8 @@ class Observation(BaseModel):
     """Represents an observation or perception from the environment."""
     content: str = Field(description="The content of the observation.")
 
-    def to_event(self) -> ObservationEvent:
-        return ObservationEvent(**self.model_dump())
+    def to_event(self) -> PromptEvent:
+        return PromptEvent(prompt=self.content)
 
 class ToolCallArg(BaseModel):
     """Represents a single argument for a tool call."""
@@ -105,6 +105,12 @@ class Tool(BaseModel):
         return base
                 
     async def execute(self, args: dict[str, Any]) -> Any:
+        """
+        Execute the tool given a dictionary of arguments.
+
+        Args:
+            args (dict[str, Any]): Arguments for the tool call
+        """
         if inspect.iscoroutinefunction(self.fn):
             try:
                 result = await self.fn(**args)
@@ -118,4 +124,10 @@ class Tool(BaseModel):
                 result = f"An error occurred while calling tool {self.name} with arguments: {args}: {e}"
     
     def get_permission(self, args: dict[str, Any]) -> ToolPermissionEvent:
+        """
+        Emits an event to get permission for executing a tool.
+
+        Args:
+            args (dict[str, Any]): Arguments for the tool call
+        """
         return ToolPermissionEvent(tool_name=self.name, tool_input=args)

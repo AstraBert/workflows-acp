@@ -11,9 +11,6 @@ class PromptEvent(Event):
 class ThinkingEvent(Event):
     content: str
 
-class ObservationEvent(Event):
-    content: str
-
 class AskHumanEvent(InputRequiredEvent):
     question: str
 
@@ -27,6 +24,8 @@ class ToolPermissionEvent(InputRequiredEvent):
 class PermissionResponseEvent(HumanResponseEvent):
     allow: bool
     reason: str | None
+    tool_name: str
+    tool_input: dict[str, Any]
 
 class ToolCallEvent(Event):
     tool_name: str

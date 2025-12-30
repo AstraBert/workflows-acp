@@ -1,6 +1,7 @@
 import os
 
 from typing import Type
+from pathlib import Path
 from google.genai.types import Content, HttpOptions, Part
 from google.genai import Client as GenAIClient
 from .models import Tool, StructuredSchemaT
@@ -29,6 +30,7 @@ In order to accomplish this task, you will be asked to:
 ## Tools
 
 {{tools}}
+{{additional_instructions}}
 """
 
 SYSTEM_PROMPT_TEMPLATE = Template(content=SYSTEM_PROMPT_STRING)
@@ -38,6 +40,7 @@ Assist the user with their requests, leveraging the tools available to you (as p
 """
 
 DEFAULT_MODEL = "gemini-3-flash"
+AGENTS_MD = Path("AGENTS.md")
 
 def _check_tools(tools: list[Tool]) -> bool:
     names = [tool.name for tool in tools]
@@ -65,9 +68,13 @@ class LLMWrapper:
             )
         if not _check_tools(tools=tools):
             raise ValueError("All the tools provided should have different names")
+        if AGENTS_MD.exists():
+            additional_instructions = "## Additional Instructions\n\n```md\n" + AGENTS_MD.read_text() + "\n```\n"
+        else:
+            additional_instructions = ""
         task = agent_task or DEFAULT_TASK
         tools_str = "\n\n".join([tool.to_string() for tool in tools])
-        system_prompt = SYSTEM_PROMPT_TEMPLATE.render({"task": task, "tools": tools_str})
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.render({"task": task, "tools": tools_str, "additional_instructions": additional_instructions})
         self.tools = tools
         self._client = GenAIClient(
             api_key=api_key, http_options=HttpOptions(api_version="v1")

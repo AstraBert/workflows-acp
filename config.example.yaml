@@ -1,0 +1,12 @@
+mode: "ask" # allowed: 'ask', 'bypass'; default: 'ask'
+model: "gemini-3-pro" # allowed: all Gemini model; default: 'gemini-3-flash' 
+agent_task: "You need to assist the user in coding tasks for the python language. Use the filesystem-related tools given to you to read, write and edit existing files, and run them with bash tools. Once you are done, make sure to write a REPORT.md for your changes." # allowed: string or null; default: null
+tools: # the following are all the allowed tools
+  - describe_dir_content
+  - read_file
+  - grep_file_content
+  - glob_paths
+  - write_file
+  - edit_file
+  - execute_command
+  - bash_output
