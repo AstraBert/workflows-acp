@@ -2,6 +2,7 @@ import os
 import re
 import glob
 
+
 def describe_dir_content(directory: str) -> str:
     if not os.path.exists(directory) or not os.path.isdir(directory):
         return f"No such directory: {directory}"
@@ -52,6 +53,7 @@ def glob_paths(directory: str, pattern: str) -> str:
         return f"MATCHES for {pattern} in {directory}:\n\n- " + "\n- ".join(matches)
     return "No matches found"
 
+
 def write_file(file_path: str, content: str, overwrite: bool) -> str:
     if os.path.exists(file_path) and os.path.isfile(file_path) and not overwrite:
         return f"File {file_path} already exist and overwrite is set to False. Cannot proceed"
@@ -60,14 +62,13 @@ def write_file(file_path: str, content: str, overwrite: bool) -> str:
             f.write(content)
         return "File written with success"
 
+
 def edit_file(file_path: str, old_string: str, new_string: str, count: int = -1) -> str:
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return f"No such file: {file_path}"
     with open(file_path, "r") as f:
         content = f.read()
-    content = content.replace(old_string, new_string, count=count)
+    content = content.replace(old_string, new_string, count=count)  # type: ignore[no-matching-overload]
     with open(file_path, "w") as f:
         f.write(content)
     return "File edited with success"
-
-    

@@ -2,7 +2,7 @@ import os
 
 from typing import Type
 from pathlib import Path
-from google.genai.types import Content, HttpOptions, Part
+from google.genai.types import Content, Part, GenerateContentConfig
 from google.genai import Client as GenAIClient
 from .models import Tool, StructuredSchemaT
 from ._templating import Template
@@ -39,18 +39,27 @@ DEFAULT_TASK = """
 Assist the user with their requests, leveraging the tools available to you (as per the `Tools` section) and following the think -> act -> observe pattern detailed in the `Methods` section.
 """
 
-DEFAULT_MODEL = "gemini-3-flash"
+DEFAULT_MODEL = "gemini-3-flash-preview"
 AGENTS_MD = Path("AGENTS.md")
+
 
 def _check_tools(tools: list[Tool]) -> bool:
     names = [tool.name for tool in tools]
     return len(names) == len(set(names))
 
+
 class LLMWrapper:
     """
     Wrapper for Google GenAI LLM to generalize structured generation and extend agentic capabilities.
     """
-    def __init__(self, tools: list[Tool], agent_task: str | None = None, api_key: str | None = None, model: str | None = None):
+
+    def __init__(
+        self,
+        tools: list[Tool],
+        agent_task: str | None = None,
+        api_key: str | None = None,
+        model: str | None = None,
+    ):
         """
         Initialize LLMWrapper.
 
@@ -69,16 +78,24 @@ class LLMWrapper:
         if not _check_tools(tools=tools):
             raise ValueError("All the tools provided should have different names")
         if AGENTS_MD.exists():
-            additional_instructions = "## Additional Instructions\n\n```md\n" + AGENTS_MD.read_text() + "\n```\n"
+            additional_instructions = (
+                "## Additional Instructions\n\n```md\n"
+                + AGENTS_MD.read_text()
+                + "\n```\n"
+            )
         else:
             additional_instructions = ""
         task = agent_task or DEFAULT_TASK
         tools_str = "\n\n".join([tool.to_string() for tool in tools])
-        system_prompt = SYSTEM_PROMPT_TEMPLATE.render({"task": task, "tools": tools_str, "additional_instructions": additional_instructions})
-        self.tools = tools
-        self._client = GenAIClient(
-            api_key=api_key, http_options=HttpOptions(api_version="v1")
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.render(
+            {
+                "task": task,
+                "tools": tools_str,
+                "additional_instructions": additional_instructions,
+            }
         )
+        self.tools = tools
+        self._client = GenAIClient(api_key=api_key)
         self._chat_history: list[Content] = [
             Content(role="system", parts=[Part.from_text(text=system_prompt)])
         ]
@@ -89,14 +106,16 @@ class LLMWrapper:
             Content(role="user", parts=[Part.from_text(text=content)])
         )
 
-    async def generate(self, schema: Type[StructuredSchemaT]) -> StructuredSchemaT | None:
+    async def generate(
+        self, schema: Type[StructuredSchemaT]
+    ) -> StructuredSchemaT | None:
         response = await self._client.aio.models.generate_content(
             model=self.model,
             contents=self._chat_history,  # type: ignore
-            config={
-                "response_mime_type": "application/json",
-                "response_json_schema": schema.model_json_schema(),
-            },
+            config=GenerateContentConfig(
+                response_json_schema=schema.model_json_schema(),
+                response_mime_type="application/json",
+            ),
         )
         if response.candidates is not None:
             if response.candidates[0].content is not None:
@@ -104,8 +123,8 @@ class LLMWrapper:
             if response.text is not None:
                 return schema.model_validate_json(response.text)
         return None
-    
+
     def get_tool(self, tool_name: str) -> Tool:
-        tools = [tool for tool in self.tools if tool == tool_name]
+        tools = [tool for tool in self.tools if tool.name == tool_name]
         assert len(tools) == 1
         return tools[0]

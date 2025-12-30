@@ -1,80 +1,101 @@
 import inspect
 
 from pydantic import BaseModel, Field
-from typing import Literal, Any, Callable, TypedDict, NotRequired, TypeVar
-from .events import ThinkingEvent, ToolCallEvent, OutputEvent, AskHumanEvent, ToolPermissionEvent, PromptEvent
+from typing import Literal, Any, Callable, TypedDict, TypeVar
+from typing_extensions import NotRequired
+from .events import (
+    ThinkingEvent,
+    ToolCallEvent,
+    OutputEvent,
+    ToolPermissionEvent,
+    PromptEvent,
+)
 
-ActionType = Literal["tool_call", "stop", "ask_human"]
+ActionType = Literal["tool_call", "stop"]
 StructuredSchemaT = TypeVar("StructuredSchemaT", bound=BaseModel)
+
 
 class Thought(BaseModel):
     """Represents a thought or internal reasoning step."""
+
     content: str = Field(description="The content of the thought.")
 
     def to_event(self) -> ThinkingEvent:
         return ThinkingEvent(**self.model_dump())
 
+
 class Observation(BaseModel):
     """Represents an observation or perception from the environment."""
+
     content: str = Field(description="The content of the observation.")
 
     def to_event(self) -> PromptEvent:
         return PromptEvent(prompt=self.content)
 
+
 class ToolCallArg(BaseModel):
     """Represents a single argument for a tool call."""
+
     arg_name: str = Field(description="The name of the argument for the tool call.")
     arg_value: Any = Field(description="The value of the argument for the tool call.")
 
+
 class ToolCall(BaseModel):
     """Represents a call to a tool with its input arguments."""
+
     tool_name: str = Field(description="The name of the tool to call.")
-    tool_input: list[ToolCallArg] = Field(description="The list of arguments to pass to the tool.")
+    tool_input: list[ToolCallArg] = Field(
+        description="The list of arguments to pass to the tool."
+    )
+
 
 class Stop(BaseModel):
     """Represents the stopping condition and final output of an action sequence."""
+
     stop_reason: str = Field(description="The reason for stopping.")
     final_output: str = Field(description="The final output produced when stopping.")
 
-class AskHuman(BaseModel):
-    """Represents a request to ask a human a question."""
-    question: str = Field(description="The question to ask the human.")
 
 class Action(BaseModel):
     """Represents an action, which can be a tool call, stop action, or ask human action."""
-    type: ActionType = Field(description="The type of action: 'tool_call', 'stop', or 'ask_human'.")
-    tool_call: ToolCall | None = Field(description="The tool call details if the action is a tool call, otherwise None.")
-    stop: Stop | None = Field(description="The stop details if the action is a stop, otherwise None.")
-    ask_human: AskHuman | None = Field(description="The ask human details if the action is an ask_human, otherwise None.")
 
-    def to_event(self) -> ToolCallEvent | OutputEvent | AskHumanEvent:
+    type: ActionType = Field(description="The type of action: 'tool_call' or 'stop'.")
+    tool_call: ToolCall | None = Field(
+        description="The tool call details if the action is a tool call, otherwise None."
+    )
+    stop: Stop | None = Field(
+        description="The stop details if the action is a stop, otherwise None."
+    )
+
+    def to_event(self) -> ToolCallEvent | OutputEvent:
         if self.type == "stop":
             assert self.stop is not None
             return OutputEvent(**self.stop.model_dump())
-        elif self.type == "tool_call":
+        else:
             assert self.tool_call is not None
             args = {}
             for arg in self.tool_call.tool_input:
                 args[arg.arg_name] = arg.arg_value
             return ToolCallEvent(tool_name=self.tool_call.tool_name, tool_input=args)
-        else:
-            assert self.ask_human is not None
-            return AskHumanEvent(**self.ask_human.model_dump())
+
 
 class ParameterMetadata(TypedDict):
     """Represents metadata for a parameter from a function"""
+
     type: str | None
     required: bool
     default: NotRequired[Any]
 
+
 class Tool(BaseModel):
     """Represents the defition of a tool
-    
+
     Attributes:
         name (str): the name of the tool
         description (str): the description of the tool function
         fn (Callbale): the function to be called alongside the tool
     """
+
     name: str
     description: str
     fn: Callable
@@ -91,7 +112,7 @@ class Tool(BaseModel):
                 metadata["default"] = param.default
             parameters.update({param.name: metadata})
         return parameters
-    
+
     def to_string(self) -> str:
         """
         Transform the tool metadata into an LLM-friendly tool description
@@ -99,11 +120,19 @@ class Tool(BaseModel):
         base = f"Tool Name: {self.name}\nTool Description: {self.description}\nTool Parameters:"
         fn_metadata = self._get_fn_metadata()
         for param in fn_metadata:
-            tp = f" ({fn_metadata[param]['type']})" if fn_metadata[param]['type'] is not None else ''
-            req = 'required' if fn_metadata[param]['required'] else f'not required (default: {fn_metadata[param].get("default")})'
+            tp = (
+                f" ({fn_metadata[param]['type']})"
+                if fn_metadata[param]["type"] is not None
+                else ""
+            )
+            req = (
+                "required"
+                if fn_metadata[param]["required"]
+                else f"not required (default: {fn_metadata[param].get('default')})"
+            )
             base += f"\n- `{param}`{tp} - {req}"
         return base
-                
+
     async def execute(self, args: dict[str, Any]) -> Any:
         """
         Execute the tool given a dictionary of arguments.
@@ -122,7 +151,8 @@ class Tool(BaseModel):
                 result = self.fn(**args)
             except Exception as e:
                 result = f"An error occurred while calling tool {self.name} with arguments: {args}: {e}"
-    
+            return result
+
     def get_permission(self, args: dict[str, Any]) -> ToolPermissionEvent:
         """
         Emits an event to get permission for executing a tool.
