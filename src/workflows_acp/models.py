@@ -1,8 +1,9 @@
 import inspect
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Any, Callable, TypedDict, TypeVar
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, Self
+from mcp_use.client.session import Tool as McpTool
 from .events import (
     ThinkingEvent,
     ToolCallEvent,
@@ -99,6 +100,16 @@ class Tool(BaseModel):
     name: str
     description: str
     fn: Callable
+    is_mcp_tool: bool = False
+
+    @classmethod
+    def from_mcp_tool(cls, mcp_tool: McpTool, server_name: str) -> "Tool":
+        return cls(
+            name="mcp_" + server_name + "_" + mcp_tool.name,
+            description=mcp_tool.description or "",
+            fn=lambda x: x,
+            is_mcp_tool=True,
+        )
 
     def _get_fn_metadata(self) -> dict[str, ParameterMetadata]:
         sign = inspect.signature(self.fn)
@@ -161,3 +172,11 @@ class Tool(BaseModel):
             args (dict[str, Any]): Arguments for the tool call
         """
         return ToolPermissionEvent(tool_name=self.name, tool_input=args)
+
+    @model_validator(mode="after")
+    def name_validator(self) -> Self:
+        if self.name.startswith("mcp_") and not self.is_mcp_tool:
+            raise ValueError("A non-MCP tool's name cannot start with `mcp_`")
+        if not self.name.startswith("mcp_") and self.is_mcp_tool:
+            raise ValueError("An MCP tool's name must start with `mcp_`")
+        return self

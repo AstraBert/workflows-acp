@@ -7,11 +7,12 @@ name = "workflows-acp"
 version = "0.1.0"
 description = "LlamaIndex Agent Workflows over the ACP wire"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "agent-client-protocol>=0.7.1",
     "google-genai>=1.56.0",
     "llama-index-workflows>=2.11.6",
+    "mcp-use>=1.5.1",
     "psutil>=7.2.1",
     "pyyaml>=6.0.3",
     "typer>=0.21.0",
