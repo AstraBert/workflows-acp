@@ -1,3 +1,3 @@
-from .acp_wrapper import VERSION
+from .constants import VERSION
 
 __version__ = VERSION

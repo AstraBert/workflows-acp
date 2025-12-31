@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "with-stdio": {
+      "command": "npx",
+      "args": [
+        "@test/mcp",
+        "hello-world"
+      ],
+      "env": {
+        "PORT": "3000",
+        "TELEMETRY": "false"
+      }
+    },
+    "with-http": {
+      "url": "https://example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer MY_API_KEY"
+      }
+    }
+  }
+}

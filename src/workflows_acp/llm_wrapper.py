@@ -6,47 +6,13 @@ from google.genai.types import Content, Part, GenerateContentConfig
 from google.genai import Client as GenAIClient
 from .models import Tool, StructuredSchemaT
 from ._templating import Template
-
-SYSTEM_PROMPT_STRING = """
-## Main Task
-
-You are a helpful assistant whose main task is:
-
-```md
-{{task}}
-```
-
-## Methods
-
-In order to accomplish this task, you will be asked to:
-
-- **Think**: reflect on the user's request and on what you have already done (available through chat history)
-- **Act**: Take an action based on the current situation and informed by the chat history. The action might be:
-    + A tool call (using one of the available tools, listed in the `Tools` section)
-    + A question to the user (human in the loop)
-    + A stop call (providing a stop reason and a final result)
-- **Observe**: Following tool calls, you will observe/summarize the current situation in order to inform the thinking step about tool results and potential scenarios moving forward.
-
-## Tools
-
-{{tools}}
-{{additional_instructions}}
-"""
+from .constants import SYSTEM_PROMPT_STRING, DEFAULT_MODEL, DEFAULT_TASK, AGENTS_MD
 
 SYSTEM_PROMPT_TEMPLATE = Template(content=SYSTEM_PROMPT_STRING)
-
-DEFAULT_TASK = """
-Assist the user with their requests, leveraging the tools available to you (as per the `Tools` section) and following the think -> act -> observe pattern detailed in the `Methods` section.
-"""
-
-DEFAULT_MODEL = "gemini-3-flash-preview"
-AGENTS_MD = Path("AGENTS.md")
-
 
 def _check_tools(tools: list[Tool]) -> bool:
     names = [tool.name for tool in tools]
     return len(names) == len(set(names))
-
 
 class LLMWrapper:
     """

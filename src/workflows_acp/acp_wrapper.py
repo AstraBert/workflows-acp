@@ -2,6 +2,7 @@ import logging
 import yaml
 from typing import Any, cast, Literal
 from datetime import datetime
+from rich import print as rprint
 
 from acp import (
     PROTOCOL_VERSION,
@@ -40,9 +41,7 @@ from acp.schema import (
     SseMcpServer,
     TextContentBlock,
     SessionModeState,
-    SessionMode,
     SessionInfo,
-    PermissionOption,
 )
 
 from .workflow import AgentWorkflow
@@ -59,25 +58,8 @@ from .events import (
     ToolCallEvent,
     ToolResultEvent,
 )
-
-MODES = [
-    SessionMode(
-        id="bypass",
-        name="bypassToolPermission",
-        description="Bypass asking for tool permission, executing tools directly (not recommended, use 'askToolPermission' instead)",
-    ),
-    SessionMode(
-        id="ask",
-        name="askToolPermission",
-        description="Ask for tool usage permission before executing it.",
-    ),
-]
-PERMISSION_OPTIONS = [
-    PermissionOption(kind="allow_once", name="Allow", option_id="allow"),
-    PermissionOption(kind="reject_once", name="Reject", option_id="reject"),
-]
-VERSION = "0.1.0"
-DEFAULT_MODE_ID = "ask"
+from .mcp_wrapper import McpWrapper, McpServersConfig
+from .constants import MODES, PERMISSION_OPTIONS, AGENT_CONFIG_FILE, VERSION, DEFAULT_MODE_ID, MCP_CONFIG_FILE
 
 
 class AcpAgentWorkflow(Agent):
@@ -89,6 +71,8 @@ class AcpAgentWorkflow(Agent):
         agent_task: str | None = None,
         tools: list[Tool] | list[DefaultToolType] | None = None,
         mode: str | None = None,
+        mcp_wrapper: McpWrapper | None = None,
+        mcp_tools: list[Tool] | None = None,
     ) -> None:
         self._next_session_id = 0
         self._sessions: set[str] = set()
@@ -102,21 +86,29 @@ class AcpAgentWorkflow(Agent):
                 _impl_tools = cast(list[Tool], tools)
             else:
                 _impl_tools = filter_tools(names=cast(list[DefaultToolType], tools))
+        if mcp_tools is not None:
+            _impl_tools.extend(mcp_tools)
         self._llm = LLMWrapper(
             tools=_impl_tools, agent_task=agent_task, model=llm_model
         )
+        self._mcp_client = mcp_wrapper
 
     @classmethod
     def ext_from_config_file(
-        cls, config_file: str = "agent_config.yaml"
+        cls,
+        mcp_wrapper: McpWrapper | None = None,
+        mcp_tools: list[Tool] | None = None,
     ) -> "AcpAgentWorkflow":
-        with open(config_file, "r") as f:
+        assert AGENT_CONFIG_FILE.exists() and AGENT_CONFIG_FILE.is_file(), f"No such file: {str(AGENT_CONFIG_FILE)}"
+        with open(AGENT_CONFIG_FILE, "r") as f:
             data = yaml.safe_load(f)
         config: dict[str, Any] = {
             "agent_task": None,
             "llm_model": None,
             "tools": None,
             "mode": None,
+            "mcp_wrapper": mcp_wrapper,
+            "mcp_tools": mcp_tools,
         }
         if "agent_task" in data:
             config["agent_task"] = data["agent_task"]
@@ -164,7 +156,7 @@ class AcpAgentWorkflow(Agent):
                 mcp_capabilities=McpCapabilities(http=False, sse=False),
             ),
             agent_info=Implementation(
-                name="workflows-acp", title="AgentWorkflow", version="0.1.0"
+                name="workflows-acp", title="AgentWorkflow", version=VERSION
             ),
         )
 
@@ -278,7 +270,7 @@ class AcpAgentWorkflow(Agent):
         for block in prompt:
             if isinstance(block, TextContentBlock):
                 _impl_prompt += block.text + "\n"
-        wf = AgentWorkflow(llm=self._llm)
+        wf = AgentWorkflow(llm=self._llm, mcp_client=self._mcp_client)
         handler = wf.run(
             start_event=InputEvent(
                 prompt=_impl_prompt, mode=cast(Literal["ask", "bypass"], self._mode)
@@ -401,13 +393,32 @@ async def start_agent(
     agent_task: str | None = None,
     tools: list[Tool] | list[DefaultToolType] | None = None,
     mode: str | None = None,
-    config_file: str | None = None,
+    from_config_file: bool = False,
+    mcp_config: McpServersConfig | None = None,
+    use_mcp: bool = True,
 ):
-    logging.basicConfig(level=logging.INFO)
-    if config_file is not None:
-        agent = AcpAgentWorkflow.ext_from_config_file(config_file)
+    logging.basicConfig(
+        filename='app.log',
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    mcp_wrapper: McpWrapper | None = None
+    mcp_tools: list[Tool] | None = None
+    if use_mcp:
+        if mcp_config is not None:
+            mcp_wrapper = McpWrapper.from_config_dict(mcp_config)
+        elif MCP_CONFIG_FILE.exists() and MCP_CONFIG_FILE.is_file():
+            mcp_wrapper = McpWrapper.from_file()
+        else:
+            rprint("[yellow bold]WARNING[/]\tCannot use MCP if neither an MCP configuration dictionary nor an MCP config file are provided")
+    if mcp_wrapper is not None:
+        logging.info("Starting to load all MCP tools...")
+        mcp_tools = await mcp_wrapper.all_tools()
+        logging.info("MCP tools loaded successfully!")
+    if from_config_file:
+        agent = AcpAgentWorkflow.ext_from_config_file(mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools)
     else:
         agent = AcpAgentWorkflow(
-            llm_model=llm_model, agent_task=agent_task, tools=tools, mode=mode
+            llm_model=llm_model, agent_task=agent_task, tools=tools, mode=mode, mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools
         )
     await run_agent(agent=agent)

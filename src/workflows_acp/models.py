@@ -1,4 +1,5 @@
 import inspect
+import json
 
 from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Any, Callable, TypedDict, TypeVar
@@ -87,6 +88,11 @@ class ParameterMetadata(TypedDict):
     required: bool
     default: NotRequired[Any]
 
+class McpMetadata(TypedDict):
+    """Represents the metadata for an MCP tool"""
+    server: str
+    input_schema: dict[str, Any] | None
+    output_schema: dict[str, Any] | None
 
 class Tool(BaseModel):
     """Represents the defition of a tool
@@ -95,23 +101,25 @@ class Tool(BaseModel):
         name (str): the name of the tool
         description (str): the description of the tool function
         fn (Callbale): the function to be called alongside the tool
+        mcp_metadata (McpMetadata | None): metadata for MCP tools
     """
 
     name: str
     description: str
-    fn: Callable
-    is_mcp_tool: bool = False
+    fn: Callable | None
+    mcp_metadata: McpMetadata | None = None
 
     @classmethod
     def from_mcp_tool(cls, mcp_tool: McpTool, server_name: str) -> "Tool":
         return cls(
-            name="mcp_" + server_name + "_" + mcp_tool.name,
+            name="mcp_" + mcp_tool.name,
             description=mcp_tool.description or "",
-            fn=lambda x: x,
-            is_mcp_tool=True,
+            fn=None,
+            mcp_metadata=McpMetadata(server=server_name, input_schema=mcp_tool.inputSchema, output_schema=mcp_tool.outputSchema),
         )
 
     def _get_fn_metadata(self) -> dict[str, ParameterMetadata]:
+        assert self.fn is not None, "Function should be not-null to get its metadata"
         sign = inspect.signature(self.fn)
         parameters: dict[str, ParameterMetadata] = {}
         for param in sign.parameters.values():
@@ -128,20 +136,36 @@ class Tool(BaseModel):
         """
         Transform the tool metadata into an LLM-friendly tool description
         """
-        base = f"Tool Name: {self.name}\nTool Description: {self.description}\nTool Parameters:"
-        fn_metadata = self._get_fn_metadata()
-        for param in fn_metadata:
-            tp = (
-                f" ({fn_metadata[param]['type']})"
-                if fn_metadata[param]["type"] is not None
-                else ""
-            )
-            req = (
-                "required"
-                if fn_metadata[param]["required"]
-                else f"not required (default: {fn_metadata[param].get('default')})"
-            )
-            base += f"\n- `{param}`{tp} - {req}"
+        base = f"Tool Name: {self.name}\nTool Description: {self.description}"
+        if self.mcp_metadata is None:
+            base += "\nTool Parameters:"
+            fn_metadata = self._get_fn_metadata()
+            for param in fn_metadata:
+                tp = (
+                    f" ({fn_metadata[param]['type']})"
+                    if fn_metadata[param]["type"] is not None
+                    else ""
+                )
+                req = (
+                    "required"
+                    if fn_metadata[param]["required"]
+                    else f"not required (default: {fn_metadata[param].get('default')})"
+                )
+                base += f"\n- `{param}`{tp} - {req}"
+        else:
+            if self.mcp_metadata["input_schema"] is not None:
+                base += f"\nFrom MCP Server: {self.mcp_metadata['server']}"
+                try:
+                    inpt_schema = json.dumps(self.mcp_metadata["input_schema"], indent=2)
+                except Exception:
+                    inpt_schema = str(self.mcp_metadata["input_schema"])
+                base+=f"\nTool Input Schema:\n\n```json\n{inpt_schema}\n```\n\n"
+            if self.mcp_metadata["output_schema"] is not None:
+                try:
+                    outpt_schema = json.dumps(self.mcp_metadata["output_schema"], indent=2)
+                except Exception:
+                    outpt_schema = str(self.mcp_metadata["output_schema"])
+                base+=f"\nTool Output Schema:\n\n```json\n{outpt_schema}\n```\n\n"
         return base
 
     async def execute(self, args: dict[str, Any]) -> Any:
@@ -151,6 +175,7 @@ class Tool(BaseModel):
         Args:
             args (dict[str, Any]): Arguments for the tool call
         """
+        assert self.fn is not None, "Function should be non-null for tool execution"
         if inspect.iscoroutinefunction(self.fn):
             try:
                 result = await self.fn(**args)
@@ -175,8 +200,8 @@ class Tool(BaseModel):
 
     @model_validator(mode="after")
     def name_validator(self) -> Self:
-        if self.name.startswith("mcp_") and not self.is_mcp_tool:
-            raise ValueError("A non-MCP tool's name cannot start with `mcp_`")
-        if not self.name.startswith("mcp_") and self.is_mcp_tool:
-            raise ValueError("An MCP tool's name must start with `mcp_`")
+        if self.name.startswith("mcp_") and self.mcp_metadata is None:
+            raise ValueError("A tool whose name starts with `mcp_` must have a non-null mcp_metadata field. If this is not an MCP tool, please rename it to something else.")
+        if not self.name.startswith("mcp_") and self.mcp_metadata is not None:
+            raise ValueError("A tool whose name does not start with `mcp_` cannot have a non-null mcp_metadata field. If this is an MCP tool, please rename it so that its name starts with `mcp_`.")
         return self
