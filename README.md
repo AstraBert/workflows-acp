@@ -4,7 +4,7 @@ Run an agent powered by LlamaIndex Workflows over the ACP wire.
 
 ## Installation
 
-From source:
+To install from source:
 
 ```bash
 git clone https://github.com/AstraBert/workflows-acp
@@ -12,7 +12,7 @@ cd workflows-acp
 uv tool install .
 ```
 
-Test installation:
+To verify the installation:
 
 ```bash
 wfacp --help
@@ -20,56 +20,94 @@ wfacp --help
 
 ## Usage
 
-In order to use the CLI and python API, you need a `GOOGLE_API_KEY` set in your environment:
+To use the CLI and Python API, set your `GOOGLE_API_KEY` in the environment:
 
 ```bash
 export GOOGLE_API_KEY="my-api-key"
 ```
 
-### CLI
-
-In order to use the CLI agent, you need to provide an `agent_config.yaml` file, containing the following fields:
-
-- `mode` ('ask' or 'bypass'): permission mode for the agent. Default is `ask`
-- `tools`: list of tools (among the default ones) that the agent can use
-- `model`: the LLM model that the agent should use (Gemini models only). Default is `gemini-3-flash-preview`
-- `agent_task`: task that you need the agent's assistance on.
-
-Find an example in [agent_config.yaml](./agent_config.yaml).
-
-You can also add/modify configuration options to your existing `agent_config.yaml` with the command line app `wfacp`:
+To reduce logging noise from [mcp-use](https://mcp-use.com)'s telemetry, run:
 
 ```bash
-# create config file
-touch agent_config.yaml
-# add tool
+export MCP_USE_ANONYMIZED_TELEMETRY=false
+```
+
+### CLI
+
+To use the CLI agent, provide an `agent_config.yaml` file with the following fields:
+
+- `mode` ('ask' or 'bypass'): Permission mode for the agent. Default is `ask`.
+- `tools`: List of tools (from the default set) available to the agent.
+- `model`: The LLM model for the agent (Gemini models only). Default is `gemini-3-flash-preview`.
+- `agent_task`: The task for which you need the agent's assistance.
+
+See the example in [agent_config.yaml](./agent_config.yaml).
+
+You can add or modify configuration options in your `agent_config.yaml` using the `wfacp` CLI:
+
+```bash
+# Add a tool
 wfacp add-tool -t read_file
-# remove tool
+# Remove a tool
 wfacp rm-tool -t read_file
-# add/modify agent task
+# Add or modify the agent task
 wfacp task -t "You should assist the user with python coding"
-# add/modify mode
+# Set or change the mode
 wfacp mode -m bypass
-# add/modify model
+# Set or change the model
 wfacp model -m gemini-3-pro-preview
 ```
 
-To run the agent, use an ACP-compatible client like `toad` or Zed editor.
+To use the agent with MCP servers, create a `.mcp.json` file with server definitions:
+
+```json
+{
+  "mcpServers": {
+    "with-stdio": {
+      "command": "npx",
+      "args": [
+        "@mcp/server",
+        "start"
+      ]
+    },
+    "with-http": {
+      "url": "https://example.com/mcp"
+    }
+  }
+}
+```
+
+For servers using `stdio`, specify a `command` and optionally a list of `args` and an `env` for the MCP process. For servers using `http`, specify a `url` and optionally add `headers` for requests.
+
+See a complete example in [`.mcp.json`](./.mcp.json).
+
+MCP configuration can also be managed via CLI:
+
+```bash
+# Add a stdio MCP server
+wfacp add-mcp --name test --transport stdio --command 'npx @mcp/server arg1 arg2' --env "PORT=3000" --env "TELEMETRY=false"
+# Add an HTTP MCP server
+wfacp add-mcp --name search --transport http --url https://www.search.com/mcp --header "Authorization=Bearer $API_KEY" --header "X-Hello-World=Hello world!"
+# Remove a server
+wfacp rm-mcp --name search
+```
+
+To run the agent, use an ACP-compatible client such as `toad` or Zed editor.
 
 **With `toad`**
 
 ```bash
-# install toad
+# Install toad
 curl -fsSL batrachian.ai/install | sh
-# run
+# Run
 toad acp "wfacp run"
 ```
 
-A beautiful terminal interface will open and you will be able to talk to the agent through that.
+A terminal interface will open, allowing you to interact with the agent.
 
 **With Zed**
 
-Add this to your `settings.json`:
+Add the following to your `settings.json`:
 
 ```json
 {
@@ -84,11 +122,11 @@ Add this to your `settings.json`:
 }
 ```
 
-In this case, you will be able to interact with the agent directly in-IDE.
+You can then interact with the agent directly in the IDE.
 
 ## Python API
 
-Define your ACP agent by passing a specific set of tools, customizing its agent prompt or LLM model:
+Define your ACP agent by specifying tools, customizing the agent prompt, or selecting an LLM model:
 
 ```python
 import asyncio
@@ -97,7 +135,7 @@ from workflows_acp.acp_wrapper import start_agent
 from workflows_acp.models import Tool
 
 def add(x: int, y: int) -> int:
-    return x+y
+    return x + y
 
 async def query_database(query: str) -> str:
     result = await db.query(query).fetchall()
@@ -118,7 +156,7 @@ task = "You are an accountant who needs to help the user with their expenses (`e
 model = "gemini-2.5-flash"
 
 def main() -> None:
-    asyncio.run(start_agent(tools=[db_tool, add_tool], agent_task=task, llm_model=model))
+    asyncio.run(start_agent(tools=[db_tool, add_tool], agent_task=task, llm_model=model, use_mcp=False))
 ```
 
 Or load the agent from an `agent_config.yaml` file:
@@ -129,5 +167,37 @@ import asyncio
 from workflows_acp.acp_wrapper import start_agent
 
 def main() -> None:
-    asyncio.run(start_agent(confing_file="agent_config.yaml"))
+    asyncio.run(start_agent(from_config_file=True, use_mcp=False))
+```
+
+You can also configure MCP servers:
+
+```python
+import asyncio
+import os
+
+from workflows_acp.acp_wrapper import start_agent
+from workflows_acp.mcp_wrapper import McpServersConfig, HttpServer, StdioServer
+
+stdio_server = StdioServer(command="npx", args=["@test/mcp", "helloworld"], env=None)
+http_server = HttpServer(url="https://example.com/mcp", headers={"Authorization": "Bearer " + os.getenv("API_KEY", "")})
+servers_config = McpServersConfig(mcpServers={
+  "with-stdio": stdio_server,
+  "with-http": http_server,
+})
+
+def main() -> None:
+    asyncio.run(start_agent(from_config_file=True, use_mcp=True, mcp_config=servers_config))
+```
+
+Or load from a `.mcp.json` file:
+
+```python
+import asyncio
+
+from workflows_acp.acp_wrapper import start_agent
+
+def main() -> None:
+    # Automatically finds .mcp.json, loads, and validates the config
+    asyncio.run(start_agent(from_config_file=True, use_mcp=True))
 ```

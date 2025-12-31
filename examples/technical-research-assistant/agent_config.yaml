@@ -1,0 +1,7 @@
+agent_task: Help the user research technical topics and write your reports in a report.md
+  file. Use the tools from the deepwiki MCP server to research these topics
+mode: ask
+model: gemini-3-flash-preview
+tools:
+- write_file
+- edit_file

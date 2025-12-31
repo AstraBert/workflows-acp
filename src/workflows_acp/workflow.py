@@ -1,6 +1,7 @@
 from workflows import Workflow, Context, step
 
 from .llm_wrapper import LLMWrapper
+from .mcp_wrapper import McpWrapper
 from .events import (
     InputEvent,
     ThinkingEvent,
@@ -15,9 +16,12 @@ from .models import Thought, Observation, Action
 
 
 class AgentWorkflow(Workflow):
-    def __init__(self, llm: LLMWrapper, *args, **kwargs) -> None:
+    def __init__(
+        self, llm: LLMWrapper, mcp_client: McpWrapper | None, *args, **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.llm = llm
+        self.mcp_client = mcp_client
 
     @step
     async def think(
@@ -53,7 +57,15 @@ class AgentWorkflow(Workflow):
         state = await ctx.store.get_state()
         tool = self.llm.get_tool(ev.tool_name)
         if state.mode == "bypass":
-            result = await tool.execute(ev.tool_input)
+            if tool.mcp_metadata is None:
+                result = await tool.execute(ev.tool_input)
+            else:
+                assert self.mcp_client is not None, (
+                    "An MCP client must be provided to execute MCP tools"
+                )
+                result = await self.mcp_client.call_tool(
+                    ev.tool_name, ev.tool_input, tool.mcp_metadata["server"]
+                )
             event = ToolResultEvent(tool_name=ev.tool_name, result=result)
             ctx.write_event_to_stream(event)
         else:
@@ -66,7 +78,15 @@ class AgentWorkflow(Workflow):
     ) -> ToolResultEvent | PromptEvent:
         if ev.allow:
             tool = self.llm.get_tool(ev.tool_name)
-            result = await tool.execute(ev.tool_input)
+            if tool.mcp_metadata is None:
+                result = await tool.execute(ev.tool_input)
+            else:
+                assert self.mcp_client is not None, (
+                    "An MCP client must be provided to execute MCP tools"
+                )
+                result = await self.mcp_client.call_tool(
+                    ev.tool_name, ev.tool_input, tool.mcp_metadata["server"]
+                )
             event = ToolResultEvent(tool_name=ev.tool_name, result=result)
         else:
             event = PromptEvent(
