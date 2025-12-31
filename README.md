@@ -177,10 +177,10 @@ import asyncio
 import os
 
 from workflows_acp.acp_wrapper import start_agent
-from workflows_acp.mcp_wrapper import McpServersConfig, HttpServer, StdioServer
+from workflows_acp.mcp_wrapper import McpServersConfig, HttpMcpServer, StdioMcpServer
 
-stdio_server = StdioServer(command="npx", args=["@test/mcp", "helloworld"], env=None)
-http_server = HttpServer(url="https://example.com/mcp", headers={"Authorization": "Bearer " + os.getenv("API_KEY", "")})
+stdio_server = StdioMcpServer(command="npx", args=["@test/mcp", "helloworld"], env=None)
+http_server = HttpMcpServer(url="https://example.com/mcp", headers={"Authorization": "Bearer " + os.getenv("API_KEY", "")})
 servers_config = McpServersConfig(mcpServers={
   "with-stdio": stdio_server,
   "with-http": http_server,
