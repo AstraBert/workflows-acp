@@ -59,7 +59,14 @@ from .events import (
     ToolResultEvent,
 )
 from .mcp_wrapper import McpWrapper, McpServersConfig
-from .constants import MODES, PERMISSION_OPTIONS, AGENT_CONFIG_FILE, VERSION, DEFAULT_MODE_ID, MCP_CONFIG_FILE
+from .constants import (
+    MODES,
+    PERMISSION_OPTIONS,
+    AGENT_CONFIG_FILE,
+    VERSION,
+    DEFAULT_MODE_ID,
+    MCP_CONFIG_FILE,
+)
 
 
 class AcpAgentWorkflow(Agent):
@@ -99,7 +106,9 @@ class AcpAgentWorkflow(Agent):
         mcp_wrapper: McpWrapper | None = None,
         mcp_tools: list[Tool] | None = None,
     ) -> "AcpAgentWorkflow":
-        assert AGENT_CONFIG_FILE.exists() and AGENT_CONFIG_FILE.is_file(), f"No such file: {str(AGENT_CONFIG_FILE)}"
+        assert AGENT_CONFIG_FILE.exists() and AGENT_CONFIG_FILE.is_file(), (
+            f"No such file: {str(AGENT_CONFIG_FILE)}"
+        )
         with open(AGENT_CONFIG_FILE, "r") as f:
             data = yaml.safe_load(f)
         config: dict[str, Any] = {
@@ -398,9 +407,9 @@ async def start_agent(
     use_mcp: bool = True,
 ):
     logging.basicConfig(
-        filename='app.log',
+        filename="app.log",
         level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     mcp_wrapper: McpWrapper | None = None
     mcp_tools: list[Tool] | None = None
@@ -410,15 +419,24 @@ async def start_agent(
         elif MCP_CONFIG_FILE.exists() and MCP_CONFIG_FILE.is_file():
             mcp_wrapper = McpWrapper.from_file()
         else:
-            rprint("[yellow bold]WARNING[/]\tCannot use MCP if neither an MCP configuration dictionary nor an MCP config file are provided")
+            rprint(
+                "[yellow bold]WARNING[/]\tCannot use MCP if neither an MCP configuration dictionary nor an MCP config file are provided"
+            )
     if mcp_wrapper is not None:
         logging.info("Starting to load all MCP tools...")
         mcp_tools = await mcp_wrapper.all_tools()
         logging.info("MCP tools loaded successfully!")
     if from_config_file:
-        agent = AcpAgentWorkflow.ext_from_config_file(mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools)
+        agent = AcpAgentWorkflow.ext_from_config_file(
+            mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools
+        )
     else:
         agent = AcpAgentWorkflow(
-            llm_model=llm_model, agent_task=agent_task, tools=tools, mode=mode, mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools
+            llm_model=llm_model,
+            agent_task=agent_task,
+            tools=tools,
+            mode=mode,
+            mcp_wrapper=mcp_wrapper,
+            mcp_tools=mcp_tools,
         )
     await run_agent(agent=agent)

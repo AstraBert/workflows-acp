@@ -8,7 +8,12 @@ from typer import Typer, Option, Exit
 from typing import Annotated, Literal, Any
 from .tools import DefaultToolType
 from .constants import AGENT_CONFIG_FILE, MCP_CONFIG_FILE
-from .mcp_wrapper import HttpMcpServer, StdioMcpServer, McpServersConfig, _validate_mcp_server
+from .mcp_wrapper import (
+    HttpMcpServer,
+    StdioMcpServer,
+    McpServersConfig,
+    _validate_mcp_server,
+)
 
 app = Typer(name="wfacp", help="Run a LlamaIndex Agent Workflow with ACP communication")
 
@@ -20,7 +25,11 @@ app = Typer(name="wfacp", help="Run a LlamaIndex Agent Workflow with ACP communi
 def main(
     use_mcp: Annotated[
         bool,
-        Option("--mcp/--no-mcp", help="Add MCP servers configured within the `.mcp.json` file. Defaults to true", is_flag=True)
+        Option(
+            "--mcp/--no-mcp",
+            help="Add MCP servers configured within the `.mcp.json` file. Defaults to true",
+            is_flag=True,
+        ),
     ] = True,
 ) -> None:
     from .acp_wrapper import start_agent
@@ -49,6 +58,7 @@ def set_model(
     data["model"] = model
     with open(AGENT_CONFIG_FILE, "w") as f:
         yaml.safe_dump(data, f)
+
 
 @app.command(name="add-tool", help="Add a tool to the agent configuration file")
 def add_tool(
@@ -144,31 +154,52 @@ def set_task(
     with open(AGENT_CONFIG_FILE, "w") as f:
         yaml.safe_dump(data, f)
 
-@app.command(name="add-mcp", help="Add an MCP server to the `.mcp.json` configuration file")
+
+@app.command(
+    name="add-mcp", help="Add an MCP server to the `.mcp.json` configuration file"
+)
 def add_mcp(
-    name: Annotated[
-        str,
-        Option("--name", "-n", help="Name of the MCP server")
-    ],
+    name: Annotated[str, Option("--name", "-n", help="Name of the MCP server")],
     transport: Annotated[
         Literal["stdio", "http"],
-        Option("--transport", "-t", help="Type of transport for the MCP server", show_choices=True),
+        Option(
+            "--transport",
+            "-t",
+            help="Type of transport for the MCP server",
+            show_choices=True,
+        ),
     ],
     command: Annotated[
         str | None,
-        Option("--command", "-c", help="Command to start the stdio MCP server. Pass the entire command (including the arguments), for instance: 'npx @my-mcp/server arg1'. Will be ignored if transport is set to `http`")
+        Option(
+            "--command",
+            "-c",
+            help="Command to start the stdio MCP server. Pass the entire command (including the arguments), for instance: 'npx @my-mcp/server arg1'. Will be ignored if transport is set to `http`",
+        ),
     ] = None,
     env: Annotated[
         list[str],
-        Option("--env", "-e", help="The environment variables that should be associated to the stdio MCP server process. You can use this option multiple times, and should pass the env variable in this form: 'NAME=VALUE'. Will be ignored if transport is set to `http`")
+        Option(
+            "--env",
+            "-e",
+            help="The environment variables that should be associated to the stdio MCP server process. You can use this option multiple times, and should pass the env variable in this form: 'NAME=VALUE'. Will be ignored if transport is set to `http`",
+        ),
     ] = [],
     url: Annotated[
         str | None,
-        Option("--url", "-u", help="URL of the HTTP MCP server. Will be ignored if transport is set to `stdio`")
+        Option(
+            "--url",
+            "-u",
+            help="URL of the HTTP MCP server. Will be ignored if transport is set to `stdio`",
+        ),
     ] = None,
     headers: Annotated[
         list[str],
-        Option("--header", "-x", help="Header name and value to associate to requests made to an HTTP MCP server. You can use this option multiple times, and should pass the header in this form: 'NAME=VALUE'. Will be ignored if transport is set to `stdio`")
+        Option(
+            "--header",
+            "-x",
+            help="Header name and value to associate to requests made to an HTTP MCP server. You can use this option multiple times, and should pass the header in this form: 'NAME=VALUE'. Will be ignored if transport is set to `stdio`",
+        ),
     ] = [],
 ) -> None:
     _from_scratch = False
@@ -178,11 +209,17 @@ def add_mcp(
     if not _from_scratch:
         with open(MCP_CONFIG_FILE, "r") as f:
             data = json.load(f)
-        assert isinstance(data, dict), f"File {str(MCP_CONFIG_FILE)} does not contain a valid JSON map"
-        assert "mcpServers" in data, f"File {str(MCP_CONFIG_FILE)} does not contain the 'mcpServers' key needed for a valid MCP configuration"
+        assert isinstance(data, dict), (
+            f"File {str(MCP_CONFIG_FILE)} does not contain a valid JSON map"
+        )
+        assert "mcpServers" in data, (
+            f"File {str(MCP_CONFIG_FILE)} does not contain the 'mcpServers' key needed for a valid MCP configuration"
+        )
         mcp_servers_config: McpServersConfig = {"mcpServers": {}}
         for server in data["mcpServers"]:
-            mcp_servers_config["mcpServers"][server] = _validate_mcp_server(data["mcpServers"][server])
+            mcp_servers_config["mcpServers"][server] = _validate_mcp_server(
+                data["mcpServers"][server]
+            )
     else:
         mcp_servers_config: McpServersConfig = {"mcpServers": {}}
     if transport == "stdio":
@@ -195,37 +232,50 @@ def add_mcp(
             if len(mcp_cmd) > 1:
                 args = mcp_cmd[1:]
         else:
-            rprint("[bold red]ERROR:[/]\tIf transport is set to stdio, you should provide a command.")
+            rprint(
+                "[bold red]ERROR:[/]\tIf transport is set to stdio, you should provide a command."
+            )
             raise Exit(1)
         if len(env) > 0:
             for s in env:
-                assert "=" in s and len(s.split("=")) == 2, f"env variables should be provided as 'NAME=VALUE', but {s} is not"
+                assert "=" in s and len(s.split("=")) == 2, (
+                    f"env variables should be provided as 'NAME=VALUE', but {s} is not"
+                )
                 cmd_env[s.split("=")[0]] = s.split("=")[1]
-        mcp_servers_config["mcpServers"][name] = StdioMcpServer(command=cmd, args=args, env=cmd_env)
+        mcp_servers_config["mcpServers"][name] = StdioMcpServer(
+            command=cmd, args=args, env=cmd_env
+        )
     else:
         mcp_url = None
         mcp_headers: dict[str, Any] = {}
         if url is None:
-            rprint("[bold red]ERROR:[/]\tIf transport is set to http, you should provide a URL.")
+            rprint(
+                "[bold red]ERROR:[/]\tIf transport is set to http, you should provide a URL."
+            )
             raise Exit(2)
         else:
             mcp_url = url
         if len(headers) > 0:
             for s in headers:
-                assert "=" in s and len(s.split("=")) == 2, f"headers should be provided as 'NAME=VALUE', but {s} is not"
+                assert "=" in s and len(s.split("=")) == 2, (
+                    f"headers should be provided as 'NAME=VALUE', but {s} is not"
+                )
                 mcp_headers[s.split("=")[0]] = s.split("=")[1]
         mcp_servers_config["mcpServers"][name] = HttpMcpServer(
-            url=mcp_url, headers=mcp_headers,
+            url=mcp_url,
+            headers=mcp_headers,
         )
     with open(MCP_CONFIG_FILE, "w") as f:
         json.dump(mcp_servers_config, f, indent=2)
 
-@app.command(name="rm-mcp", help="Remove an MCP server from the `.mcp.json` configuration file")
+
+@app.command(
+    name="rm-mcp", help="Remove an MCP server from the `.mcp.json` configuration file"
+)
 def remove_mcp(
     name: Annotated[
-        str,
-        Option("--name", "-n", help="Name of the MCP server to remove")
-    ]
+        str, Option("--name", "-n", help="Name of the MCP server to remove")
+    ],
 ) -> None:
     _from_scratch = False
     if not MCP_CONFIG_FILE.exists():
@@ -234,11 +284,17 @@ def remove_mcp(
     if not _from_scratch:
         with open(MCP_CONFIG_FILE, "r") as f:
             data = json.load(f)
-        assert isinstance(data, dict), f"File {str(MCP_CONFIG_FILE)} does not contain a valid JSON map"
-        assert "mcpServers" in data, f"File {str(MCP_CONFIG_FILE)} does not contain the 'mcpServers' key needed for a valid MCP configuration"
+        assert isinstance(data, dict), (
+            f"File {str(MCP_CONFIG_FILE)} does not contain a valid JSON map"
+        )
+        assert "mcpServers" in data, (
+            f"File {str(MCP_CONFIG_FILE)} does not contain the 'mcpServers' key needed for a valid MCP configuration"
+        )
         mcp_servers_config: McpServersConfig = {"mcpServers": {}}
         for server in data["mcpServers"]:
-            mcp_servers_config["mcpServers"][server] = _validate_mcp_server(data["mcpServers"][server])
+            mcp_servers_config["mcpServers"][server] = _validate_mcp_server(
+                data["mcpServers"][server]
+            )
     else:
         mcp_servers_config: McpServersConfig = {"mcpServers": {}}
     if name in mcp_servers_config["mcpServers"]:

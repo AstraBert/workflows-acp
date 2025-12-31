@@ -16,7 +16,9 @@ from .models import Thought, Observation, Action
 
 
 class AgentWorkflow(Workflow):
-    def __init__(self, llm: LLMWrapper, mcp_client: McpWrapper | None, *args, **kwargs) -> None:
+    def __init__(
+        self, llm: LLMWrapper, mcp_client: McpWrapper | None, *args, **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.llm = llm
         self.mcp_client = mcp_client
@@ -58,8 +60,12 @@ class AgentWorkflow(Workflow):
             if tool.mcp_metadata is None:
                 result = await tool.execute(ev.tool_input)
             else:
-                assert self.mcp_client is not None, "An MCP client must be provided to execute MCP tools"
-                result = await self.mcp_client.call_tool(ev.tool_name, ev.tool_input, tool.mcp_metadata["server"])
+                assert self.mcp_client is not None, (
+                    "An MCP client must be provided to execute MCP tools"
+                )
+                result = await self.mcp_client.call_tool(
+                    ev.tool_name, ev.tool_input, tool.mcp_metadata["server"]
+                )
             event = ToolResultEvent(tool_name=ev.tool_name, result=result)
             ctx.write_event_to_stream(event)
         else:
@@ -75,8 +81,12 @@ class AgentWorkflow(Workflow):
             if tool.mcp_metadata is None:
                 result = await tool.execute(ev.tool_input)
             else:
-                assert self.mcp_client is not None, "An MCP client must be provided to execute MCP tools"
-                result = await self.mcp_client.call_tool(ev.tool_name, ev.tool_input, tool.mcp_metadata["server"])
+                assert self.mcp_client is not None, (
+                    "An MCP client must be provided to execute MCP tools"
+                )
+                result = await self.mcp_client.call_tool(
+                    ev.tool_name, ev.tool_input, tool.mcp_metadata["server"]
+                )
             event = ToolResultEvent(tool_name=ev.tool_name, result=result)
         else:
             event = PromptEvent(

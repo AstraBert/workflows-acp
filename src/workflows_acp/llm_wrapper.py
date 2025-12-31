@@ -1,7 +1,6 @@
 import os
 
 from typing import Type
-from pathlib import Path
 from google.genai.types import Content, Part, GenerateContentConfig
 from google.genai import Client as GenAIClient
 from .models import Tool, StructuredSchemaT
@@ -10,9 +9,11 @@ from .constants import SYSTEM_PROMPT_STRING, DEFAULT_MODEL, DEFAULT_TASK, AGENTS
 
 SYSTEM_PROMPT_TEMPLATE = Template(content=SYSTEM_PROMPT_STRING)
 
+
 def _check_tools(tools: list[Tool]) -> bool:
     names = [tool.name for tool in tools]
     return len(names) == len(set(names))
+
 
 class LLMWrapper:
     """

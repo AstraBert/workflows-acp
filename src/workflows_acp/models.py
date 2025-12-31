@@ -88,11 +88,14 @@ class ParameterMetadata(TypedDict):
     required: bool
     default: NotRequired[Any]
 
+
 class McpMetadata(TypedDict):
     """Represents the metadata for an MCP tool"""
+
     server: str
     input_schema: dict[str, Any] | None
     output_schema: dict[str, Any] | None
+
 
 class Tool(BaseModel):
     """Represents the defition of a tool
@@ -115,7 +118,11 @@ class Tool(BaseModel):
             name="mcp_" + mcp_tool.name,
             description=mcp_tool.description or "",
             fn=None,
-            mcp_metadata=McpMetadata(server=server_name, input_schema=mcp_tool.inputSchema, output_schema=mcp_tool.outputSchema),
+            mcp_metadata=McpMetadata(
+                server=server_name,
+                input_schema=mcp_tool.inputSchema,
+                output_schema=mcp_tool.outputSchema,
+            ),
         )
 
     def _get_fn_metadata(self) -> dict[str, ParameterMetadata]:
@@ -156,16 +163,20 @@ class Tool(BaseModel):
             if self.mcp_metadata["input_schema"] is not None:
                 base += f"\nFrom MCP Server: {self.mcp_metadata['server']}"
                 try:
-                    inpt_schema = json.dumps(self.mcp_metadata["input_schema"], indent=2)
+                    inpt_schema = json.dumps(
+                        self.mcp_metadata["input_schema"], indent=2
+                    )
                 except Exception:
                     inpt_schema = str(self.mcp_metadata["input_schema"])
-                base+=f"\nTool Input Schema:\n\n```json\n{inpt_schema}\n```\n\n"
+                base += f"\nTool Input Schema:\n\n```json\n{inpt_schema}\n```\n\n"
             if self.mcp_metadata["output_schema"] is not None:
                 try:
-                    outpt_schema = json.dumps(self.mcp_metadata["output_schema"], indent=2)
+                    outpt_schema = json.dumps(
+                        self.mcp_metadata["output_schema"], indent=2
+                    )
                 except Exception:
                     outpt_schema = str(self.mcp_metadata["output_schema"])
-                base+=f"\nTool Output Schema:\n\n```json\n{outpt_schema}\n```\n\n"
+                base += f"\nTool Output Schema:\n\n```json\n{outpt_schema}\n```\n\n"
         return base
 
     async def execute(self, args: dict[str, Any]) -> Any:
@@ -201,7 +212,11 @@ class Tool(BaseModel):
     @model_validator(mode="after")
     def name_validator(self) -> Self:
         if self.name.startswith("mcp_") and self.mcp_metadata is None:
-            raise ValueError("A tool whose name starts with `mcp_` must have a non-null mcp_metadata field. If this is not an MCP tool, please rename it to something else.")
+            raise ValueError(
+                "A tool whose name starts with `mcp_` must have a non-null mcp_metadata field. If this is not an MCP tool, please rename it to something else."
+            )
         if not self.name.startswith("mcp_") and self.mcp_metadata is not None:
-            raise ValueError("A tool whose name does not start with `mcp_` cannot have a non-null mcp_metadata field. If this is an MCP tool, please rename it so that its name starts with `mcp_`.")
+            raise ValueError(
+                "A tool whose name does not start with `mcp_` cannot have a non-null mcp_metadata field. If this is an MCP tool, please rename it so that its name starts with `mcp_`."
+            )
         return self
