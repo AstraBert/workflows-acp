@@ -10,7 +10,7 @@ class TemplateValidationError(Exception):
 class Template:
     def __init__(self, content: str):
         self.content = content
-        self._to_render = PATTERN.findall(content, re.MULTILINE)
+        self._to_render = PATTERN.findall(content)
 
     def _validate(self, args: dict[str, str]) -> bool:
         return all(el in args for el in self._to_render) and all(

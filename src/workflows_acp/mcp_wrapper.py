@@ -1,7 +1,8 @@
 import json
 import re
 
-from typing import Any, Union, TypedDict, cast
+from typing import Any, Union, cast
+from typing_extensions import TypedDict
 from rich import print as rprint
 from mcp_use.client.session import (
     MCPSession,

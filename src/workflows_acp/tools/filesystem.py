@@ -68,7 +68,7 @@ def edit_file(file_path: str, old_string: str, new_string: str, count: int = -1)
         return f"No such file: {file_path}"
     with open(file_path, "r") as f:
         content = f.read()
-    content = content.replace(old_string, new_string, count=count)  # type: ignore[no-matching-overload]
+    content = content.replace(old_string, new_string, count)
     with open(file_path, "w") as f:
         f.write(content)
     return "File edited with success"

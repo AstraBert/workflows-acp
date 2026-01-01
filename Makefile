@@ -4,7 +4,7 @@ all: test lint format typecheck
 
 test:
 	$(info ****************** running tests ******************)
-	echo "No tests yet"
+	uv run pytest tests/
 
 lint:
 	$(info ****************** linting ******************)

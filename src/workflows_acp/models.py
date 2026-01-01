@@ -2,7 +2,8 @@ import inspect
 import json
 
 from pydantic import BaseModel, Field, model_validator
-from typing import Literal, Any, Callable, TypedDict, TypeVar
+from typing import Literal, Any, Callable, TypeVar
+from typing_extensions import TypedDict
 from typing_extensions import NotRequired, Self
 from mcp_use.client.session import Tool as McpTool
 from .events import (

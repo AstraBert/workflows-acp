@@ -20,14 +20,15 @@ def _todo_to_json(
 ) -> None:
     git_root = _find_git_root()
     if git_root is not None:
-        with open(git_root / ".gitignore", "a") as f:
-            f.write("\n# todo json file\n.todo.json\n")
+        (git_root / ".gitignore").touch()
+        if ".todo.json\n" not in (git_root / ".gitignore").read_text():
+            with open(git_root / ".gitignore", "a") as f:
+                f.write("\n# todo json file\n.todo.json\n")
     todo_list: dict[str, Literal["pending", "in_progress", "completed"]] = {}
     for i, item in enumerate(items):
         todo_list[item] = statuses[i]
     with open(TODO_FILE, "w") as f:
         json.dump(todo_list, f, indent=2)
-    pass
 
 
 def create_todos(
