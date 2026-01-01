@@ -13,21 +13,21 @@ class MemoryPiece(TypedDict):
 
 def write_memory(content: str, relevance: Annotated[int, ">=0,=<100"]) -> str:
     if not MEMORY_FILE.is_file():
+        git_root = _find_git_root()
+        if git_root is not None:
+            with open(git_root / ".gitignore", "a") as f:
+                f.write("\n# memory jsonl file\n.agent_memory.jsonl\n")
         mem_payload = MemoryPiece(content=content, relevance=relevance, id_=0)
         with open(MEMORY_FILE, "w") as f:
             s = json.dumps(mem_payload) + "\n"
             f.write(s)
     else:
-        git_root = _find_git_root()
-        if git_root is not None:
-            with open(git_root / ".gitignore", "a") as f:
-                f.write("\n# memory jsonl file\n.memory.jsonl\n")
         id_ = len(MEMORY_FILE.read_text().splitlines())
         mem_payload = MemoryPiece(content=content, relevance=relevance, id_=id_)
         with open(MEMORY_FILE, "a") as f:
             s = json.dumps(mem_payload) + "\n"
             f.write(s)
-    return ""
+    return "Memory written with success"
 
 
 def read_memory(
