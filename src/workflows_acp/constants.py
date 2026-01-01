@@ -59,3 +59,7 @@ In order to accomplish this task, you will be asked to:
 
 # MCP Wrapper
 MCP_CONFIG_FILE = Path.cwd() / ".mcp.json"
+
+# Tools
+TODO_FILE = Path.cwd() / ".todo.json"
+MEMORY_FILE = Path.cwd() / ".agent_memory.jsonl"

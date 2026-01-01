@@ -10,6 +10,8 @@ from .filesystem import (
     write_file,
     edit_file,
 )
+from .memory import write_memory, read_memory
+from .todo import create_todos, list_todos, update_todo
 
 describe_dir_content_tool = Tool(
     name="describe_dir_content",
@@ -59,6 +61,36 @@ bash_output_tool = Tool(
     fn=bash_output,
 )
 
+write_memory_tool = Tool(
+    name="write_memory",
+    description="Writes a memory with content and relevance score to persistent storage.",
+    fn=write_memory,
+)
+
+read_memory_tool = Tool(
+    name="read_memory",
+    description="Reads the most recent and relevant memory records from persistent storage.",
+    fn=read_memory,
+)
+
+create_todos_tool = Tool(
+    name="create_todos",
+    description="Creates a TODO list with specified items and statuses.",
+    fn=create_todos,
+)
+
+list_todos_tool = Tool(
+    name="list_todos",
+    description="Lists all TODO items and their statuses.",
+    fn=list_todos,
+)
+
+update_todo_tool = Tool(
+    name="update_todo",
+    description="Updates the status of a TODO item.",
+    fn=update_todo,
+)
+
 # List of all tools
 TOOLS = [
     describe_dir_content_tool,
@@ -69,6 +101,11 @@ TOOLS = [
     edit_file_tool,
     execute_command_tool,
     bash_output_tool,
+    write_memory_tool,
+    read_memory_tool,
+    create_todos_tool,
+    list_todos_tool,
+    update_todo_tool,
 ]
 
 DefaultToolType = Literal[
@@ -80,6 +117,11 @@ DefaultToolType = Literal[
     "edit_file",
     "execute_command",
     "bash_output",
+    "write_memory",
+    "read_memory",
+    "create_todos",
+    "list_todos",
+    "update_todo",
 ]
 
 
