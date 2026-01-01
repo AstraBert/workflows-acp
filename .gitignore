@@ -11,3 +11,6 @@ wheels/
 
 # logs
 *.log
+
+# caches
+*_cache/

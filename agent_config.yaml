@@ -10,3 +10,8 @@ tools: # the following are all the allowed tools
   - edit_file
   - execute_command
   - bash_output
+  - write_memory
+  - read_memory
+  - create_todos
+  - list_todos
+  - update_todos
