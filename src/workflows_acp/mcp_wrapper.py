@@ -67,7 +67,7 @@ class McpWrapper:
                     )
         else:
             self.mcp_servers = cast(McpServersConfig, mcp_servers)
-        if len(self.mcp_servers) == 0:
+        if len(self.mcp_servers["mcpServers"]) == 0:
             raise ValueError("You should provide a valid set of MCP servers")
         self._client = MCPClient.from_dict(
             config=cast(dict[str, Any], self.mcp_servers)

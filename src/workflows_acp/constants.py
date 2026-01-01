@@ -23,14 +23,14 @@ PERMISSION_OPTIONS = [
 ]
 VERSION = "0.1.0"
 DEFAULT_MODE_ID = "ask"
-AGENT_CONFIG_FILE = Path.cwd() / "agent_config.yaml"
+AGENT_CONFIG_FILE = Path("agent_config.yaml")
 
 # LLM Wrapper
 DEFAULT_TASK = """
 Assist the user with their requests, leveraging the tools available to you (as per the `Tools` section) and following the think -> act -> observe pattern detailed in the `Methods` section.
 """
 DEFAULT_MODEL = "gemini-3-flash-preview"
-AGENTS_MD = Path.cwd() / "AGENTS.md"
+AGENTS_MD = Path("AGENTS.md")
 SYSTEM_PROMPT_STRING = """
 ## Main Task
 
@@ -58,7 +58,7 @@ In order to accomplish this task, you will be asked to:
 """
 
 # MCP Wrapper
-MCP_CONFIG_FILE = Path.cwd() / ".mcp.json"
+MCP_CONFIG_FILE = Path(".mcp.json")
 
 # Tools
 TODO_FILE = Path(".todo.json")
