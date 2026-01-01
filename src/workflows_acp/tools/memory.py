@@ -1,6 +1,7 @@
 import json
 
-from typing import Annotated, TypedDict
+from typing import Annotated
+from typing_extensions import TypedDict
 from .todo import _find_git_root
 from ..constants import MEMORY_FILE
 
