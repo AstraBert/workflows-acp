@@ -1,0 +1,15 @@
+agent_task: Help the user with writing python and typescript code powered by the LlamaIndex framework, workflows and LlamaCloud platform services. Do so by accessing MCP tools from the `llamaindex-docs` MCP server, as well as by leveraging filesystem-based tools for reading, writing and file searching operations. Use memory tools to store important pieces of information gathered during exploration or deriving from user interaction, and use todo tools to keep track of your tasks.
+mode: ask
+model: gemini-3-flash-preview
+tools:
+  - describe_dir_content
+  - read_file
+  - grep_file_content
+  - glob_paths
+  - write_file
+  - edit_file
+  - write_memory
+  - read_memory
+  - create_todos
+  - list_todos
+  - update_todos
