@@ -43,6 +43,8 @@ To use the CLI agent, provide an `agent_config.yaml` file with the following fie
 
 See the example in [agent_config.yaml](./agent_config.yaml).
 
+If you wish to provide additional instructions to the agent (e.g. context on the current project, best practices, coding style rules...) you can add these instructions to an **AGENTS.md** file in the directory the agent is working in.
+
 You can add or modify configuration options in your `agent_config.yaml` using the `wfacp` CLI:
 
 ```bash
@@ -124,7 +126,29 @@ Add the following to your `settings.json`:
 
 You can then interact with the agent directly in the IDE.
 
-## Python API
+### Available tools by default
+
+The following tools are available by default and can be enabled in your `agent_config.yaml`:
+
+- `describe_dir_content`: Describes the contents of a directory, listing files and subfolders.
+- `read_file`: Reads the contents of a file and returns it as a string.
+- `grep_file_content`: Searches for a regex pattern in a file and returns all matches.
+- `glob_paths`: Finds files in a directory matching a glob pattern.
+- `write_file`: Writes content to a file, with an option to overwrite.
+- `edit_file`: Edits a file by replacing occurrences of a string with another string.
+- `execute_command`: Executes a shell command with arguments. Optionally waits for completion.
+- `bash_output`: Retrieves the stdout and stderr output of a previously started background process by PID.
+- `write_memory`: Writes a memory with content and relevance score to persistent storage.
+- `read_memory`: Reads the most recent and relevant memory records from persistent storage.
+- `create_todos`: Creates a TODO list with specified items and statuses.
+- `list_todos`: Lists all TODO items and their statuses.
+- `update_todo`: Updates the status of a TODO item.
+
+### Examples
+
+Find more examples of the CLI usage in the [examples](./examples/) folder.
+
+### Python API
 
 Define your ACP agent by specifying tools, customizing the agent prompt, or selecting an LLM model:
 
