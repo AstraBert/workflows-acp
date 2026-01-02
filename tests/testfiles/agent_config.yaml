@@ -1,0 +1,7 @@
+mode: "bypass" # allowed: 'ask', 'bypass'; default: 'ask'
+model: "gemini-3-pro-preview" # allowed: all Gemini model; default: 'gemini-3-flash' 
+agent_task: "You need to assist the user in coding tasks for the python language." # allowed: string or null; default: null
+tools: # the following are all the allowed tools
+  - write_file
+  - read_file
+  - edit_file
