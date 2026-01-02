@@ -308,7 +308,7 @@ class AcpAgentWorkflow(Agent):
                     ),
                 )
             elif isinstance(event, ToolResultEvent):
-                tool_title = f"Resulf for tool {event.tool_name}"
+                tool_title = f"Result for tool {event.tool_name}"
                 await self._conn.session_update(
                     session_id=session_id,
                     update=update_tool_call(
