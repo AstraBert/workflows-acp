@@ -16,6 +16,12 @@
       "headers": {
         "Authorization": "Bearer MY_API_KEY"
       }
+    },
+    "search": {
+      "url": "https://search.com/mcp",
+      "headers": {
+        "Authorization": "Bearer token"
+      }
     }
   }
 }
