@@ -9,23 +9,10 @@ from workflows_acp.models import Tool
 from workflows_acp.mcp_wrapper import (
     McpWrapper,
     _validate_mcp_server,
-    HttpMcpServer,
-    StdioMcpServer,
-    McpServersConfig,
     McpValidationError,
     MCP_CONFIG_FILE,
 )
-from .conftest import MockMcpClient, MCP_TOOLS
-
-MCP_CONFIG = McpServersConfig(
-    mcpServers={
-        "with-stdio": StdioMcpServer(command="npx", args=["@mcp/server"], env=None),
-        "with-http": HttpMcpServer(
-            url="https://example.com/mcp",
-            headers=None,
-        ),
-    }
-)
+from .conftest import MockMcpClient, MCP_TOOLS, MCP_CONFIG
 
 
 def setup_folder(tmp_path: Path) -> None:

@@ -397,7 +397,7 @@ class AcpAgentWorkflow(Agent):
         logging.info("Received extension notification: %s", method)
 
 
-async def start_agent(
+async def _create_agent(
     llm_model: str | None = None,
     agent_task: str | None = None,
     tools: list[Tool] | list[DefaultToolType] | None = None,
@@ -405,12 +405,7 @@ async def start_agent(
     from_config_file: bool = False,
     mcp_config: McpServersConfig | None = None,
     use_mcp: bool = True,
-):
-    logging.basicConfig(
-        filename="app.log",
-        level=logging.DEBUG,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+) -> AcpAgentWorkflow:
     mcp_wrapper: McpWrapper | None = None
     mcp_tools: list[Tool] | None = None
     if use_mcp:
@@ -427,16 +422,40 @@ async def start_agent(
         mcp_tools = await mcp_wrapper.all_tools()
         logging.info("MCP tools loaded successfully!")
     if from_config_file:
-        agent = AcpAgentWorkflow.ext_from_config_file(
+        return AcpAgentWorkflow.ext_from_config_file(
             mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools
         )
-    else:
-        agent = AcpAgentWorkflow(
-            llm_model=llm_model,
-            agent_task=agent_task,
-            tools=tools,
-            mode=mode,
-            mcp_wrapper=mcp_wrapper,
-            mcp_tools=mcp_tools,
-        )
+    return AcpAgentWorkflow(
+        llm_model=llm_model,
+        agent_task=agent_task,
+        tools=tools,
+        mode=mode,
+        mcp_wrapper=mcp_wrapper,
+        mcp_tools=mcp_tools,
+    )
+
+
+async def start_agent(
+    llm_model: str | None = None,
+    agent_task: str | None = None,
+    tools: list[Tool] | list[DefaultToolType] | None = None,
+    mode: str | None = None,
+    from_config_file: bool = False,
+    mcp_config: McpServersConfig | None = None,
+    use_mcp: bool = True,
+):
+    logging.basicConfig(
+        filename="app.log",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+    agent = await _create_agent(
+        llm_model=llm_model,
+        agent_task=agent_task,
+        tools=tools,
+        mode=mode,
+        from_config_file=from_config_file,
+        mcp_config=mcp_config,
+        use_mcp=use_mcp,
+    )
     await run_agent(agent=agent)
