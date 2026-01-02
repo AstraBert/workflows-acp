@@ -4,6 +4,17 @@ Run an agent powered by LlamaIndex Workflows over the ACP wire.
 
 ## Installation
 
+To install from registry:
+
+```bash
+# with pip
+pip install workflows-acp
+# with uv
+uv add workflows-acp
+# with uv - tool install
+uv tool install workflows-acp
+```
+
 To install from source:
 
 ```bash
