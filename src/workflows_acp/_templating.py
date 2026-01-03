@@ -8,7 +8,20 @@ class TemplateValidationError(Exception):
 
 
 class Template:
+    """
+    Jinja2-like class for string templating
+    
+    Attributes:
+        content (str): original template string
+        _to_render (list[str]): fields of the string that have to be rendered with the template
+    """
     def __init__(self, content: str):
+        """
+        Create a template from a string.
+
+        Args:
+            content (str): the template string
+        """
         self.content = content
         self._to_render = PATTERN.findall(content)
 
@@ -18,6 +31,15 @@ class Template:
         )
 
     def render(self, args: dict[str, str]) -> str:
+        """
+        Render the template.
+
+        Args:
+            args (dict[str, str]): a dictionary of arguments for the template to be rendered. The keys represent the fields in the template, and the values represent the strings with which to fill the template.
+
+        Returns:
+            str: The rendered template string.
+        """
         if self._validate(args):
             content = self.content
             for word in self._to_render:

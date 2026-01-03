@@ -7,12 +7,25 @@ from ..constants import MEMORY_FILE
 
 
 class MemoryPiece(TypedDict):
+    """
+    Represents a single memory record with an ID, content, and relevance score.
+    """
+
     id_: int
     content: str
     relevance: int
 
 
 def write_memory(content: str, relevance: Annotated[int, ">=0,=<100"]) -> str:
+    """
+    Write a new memory record to the memory file.
+
+    Args:
+        content (str): The content of the memory to store.
+        relevance (int): The relevance score (0-100) for the memory.
+    Returns:
+        str: Success message after writing the memory.
+    """
     if not MEMORY_FILE.is_file():
         git_root = _find_git_root()
         if git_root is not None:
@@ -35,6 +48,15 @@ def read_memory(
     n_records: Annotated[int, "Number of most recent records to read"] = 10,
     relevance_threashold: Annotated[int, ">=0,=<99"] = 75,
 ) -> str:
+    """
+    Read the most recent memory records above a relevance threshold.
+
+    Args:
+        n_records (int): Number of most recent records to read.
+        relevance_threashold (int): Minimum relevance score to include.
+    Returns:
+        str: Formatted string of memory records or a message if none exist.
+    """
     if MEMORY_FILE.is_file():
         lines = MEMORY_FILE.read_text().splitlines()
         pieces: list[MemoryPiece] = []

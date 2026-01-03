@@ -70,6 +70,18 @@ from .constants import (
 
 
 class AcpAgentWorkflow(Agent):
+    """
+    Implementation of the Agent for the ACP protocol, allowing LlamaIndex Workflows to communicate through it.
+
+    Attributes:
+        _conn (Client): ACP Client-side connection
+        _next_session_id (int): ID for the incoming session request
+        _session_infos (dict[str, SessionInfo]): dictionary mapping session IDs with session metadata
+        _sessions (set[str]): set of all the sessions created during the agent's lifespan
+        _current_tool_call_id (int): ID tracking the number of tool calls.
+        _llm (LLMWrapper): LLM to use with the LlamaIndex Workflow
+        _mcp_client (McpWrapper | None): MCP client to use with the LlamaIndex Workflow. None if MCP use is not requested.
+    """
     _conn: Client
 
     def __init__(
@@ -81,6 +93,17 @@ class AcpAgentWorkflow(Agent):
         mcp_wrapper: McpWrapper | None = None,
         mcp_tools: list[Tool] | None = None,
     ) -> None:
+        """
+        Initialize the AcpAgentWorkflow instance.
+
+        Args:
+            llm_model (str | None): LLM model to use.
+            agent_task (str | None): Task description for the agent.
+            tools (list[Tool] | list[DefaultToolType] | None): List of tools to use.
+            mode (str | None): Mode identifier.
+            mcp_wrapper (McpWrapper | None): MCP client wrapper.
+            mcp_tools (list[Tool] | None): Additional MCP tools.
+        """
         self._next_session_id = 0
         self._sessions: set[str] = set()
         self._session_infos: dict[str, SessionInfo] = {}
@@ -106,6 +129,15 @@ class AcpAgentWorkflow(Agent):
         mcp_wrapper: McpWrapper | None = None,
         mcp_tools: list[Tool] | None = None,
     ) -> "AcpAgentWorkflow":
+        """
+        Create an AcpAgentWorkflow instance from a config file.
+
+        Args:
+            mcp_wrapper (McpWrapper | None): MCP client wrapper.
+            mcp_tools (list[Tool] | None): Additional MCP tools.
+        Returns:
+            AcpAgentWorkflow: The initialized agent workflow.
+        """
         assert AGENT_CONFIG_FILE.exists() and AGENT_CONFIG_FILE.is_file(), (
             f"No such file: {str(AGENT_CONFIG_FILE)}"
         )
@@ -131,6 +163,14 @@ class AcpAgentWorkflow(Agent):
         return cls(**config)
 
     def _get_tool_call_id(self, increment: bool = True) -> str:
+        """
+        Generate or retrieve the current tool call ID.
+
+        Args:
+            increment (bool): Whether to increment the call ID.
+        Returns:
+            str: The tool call ID string.
+        """
         if increment:
             self._current_tool_call_id += 1
             return f"call_{self._current_tool_call_id}"
@@ -138,15 +178,13 @@ class AcpAgentWorkflow(Agent):
             return f"call_{self._current_tool_call_id}"
 
     def on_connect(self, conn: Client) -> None:
-        self._conn = conn
+        """
+        Set the ACP client connection for the agent.
 
-    async def _send_agent_message(self, session_id: str, content: Any) -> None:
-        update = (
-            content
-            if isinstance(content, AgentMessageChunk)
-            else update_agent_message(content)
-        )
-        await self._conn.session_update(session_id, update)
+        Args:
+            conn (Client): The ACP client connection.
+        """
+        self._conn = conn
 
     async def initialize(
         self,
@@ -155,6 +193,16 @@ class AcpAgentWorkflow(Agent):
         client_info: Implementation | None = None,
         **kwargs: Any,
     ) -> InitializeResponse:
+        """
+        Handle the initialize request from the client.
+
+        Args:
+            protocol_version (int): Protocol version.
+            client_capabilities (ClientCapabilities | None): Client capabilities.
+            client_info (Implementation | None): Client implementation info.
+        Returns:
+            InitializeResponse: The initialization response.
+        """
         logging.info("Received initialize request")
         return InitializeResponse(
             protocol_version=PROTOCOL_VERSION,
@@ -172,6 +220,14 @@ class AcpAgentWorkflow(Agent):
     async def authenticate(
         self, method_id: str, **kwargs: Any
     ) -> AuthenticateResponse | None:
+        """
+        Handle the authenticate request from the client.
+
+        Args:
+            method_id (str): Authentication method identifier.
+        Returns:
+            AuthenticateResponse | None: The authentication response.
+        """
         logging.info("Received authenticate request %s", method_id)
         return AuthenticateResponse()
 
@@ -181,6 +237,15 @@ class AcpAgentWorkflow(Agent):
         mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio],
         **kwargs: Any,
     ) -> NewSessionResponse:
+        """
+        Handle the new session request from the client.
+
+        Args:
+            cwd (str): Current working directory.
+            mcp_servers (list): List of MCP servers.
+        Returns:
+            NewSessionResponse: The new session response.
+        """
         logging.info("Received new session request")
         session_id = str(self._next_session_id)
         self._next_session_id += 1
@@ -203,6 +268,16 @@ class AcpAgentWorkflow(Agent):
         session_id: str,
         **kwargs: Any,
     ) -> LoadSessionResponse | None:
+        """
+        Handle the load session request from the client.
+
+        Args:
+            cwd (str): Current working directory.
+            mcp_servers (list): List of MCP servers.
+            session_id (str): Session identifier.
+        Returns:
+            LoadSessionResponse | None: The load session response.
+        """
         logging.info("Received load session request %s", session_id)
         self._sessions.add(session_id)
         self._session_infos[session_id] = SessionInfo(
@@ -218,6 +293,15 @@ class AcpAgentWorkflow(Agent):
     async def set_session_mode(
         self, mode_id: str, session_id: str, **kwargs: Any
     ) -> SetSessionModeResponse | None:
+        """
+        Set the session mode for a given session.
+
+        Args:
+            mode_id (str): Mode identifier.
+            session_id (str): Session identifier.
+        Returns:
+            SetSessionModeResponse | None: The set session mode response.
+        """
         logging.info("Received set session mode request %s -> %s", session_id, mode_id)
         self._mode = mode_id
         return SetSessionModeResponse()
@@ -225,11 +309,29 @@ class AcpAgentWorkflow(Agent):
     async def list_sessions(
         self, cursor: str | None = None, cwd: str | None = None, **kwargs: Any
     ) -> ListSessionsResponse:
+        """
+        List all sessions managed by the agent.
+
+        Args:
+            cursor (str | None): Optional cursor for pagination.
+            cwd (str | None): Optional working directory.
+        Returns:
+            ListSessionsResponse: The list of sessions response.
+        """
         return ListSessionsResponse(sessions=list(self._session_infos.values()))
 
     async def set_session_model(
         self, model_id: str, session_id: str, **kwargs: Any
     ) -> SetSessionModelResponse | None:
+        """
+        Set the model for a given session.
+
+        Args:
+            model_id (str): Model identifier.
+            session_id (str): Session identifier.
+        Returns:
+            SetSessionModelResponse | None: The set session model response.
+        """
         logging.info(
             "Received set session model request %s -> %s", session_id, model_id
         )
@@ -242,6 +344,16 @@ class AcpAgentWorkflow(Agent):
         mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
         **kwargs: Any,
     ) -> ForkSessionResponse:
+        """
+        Fork an existing session.
+
+        Args:
+            cwd (str): Current working directory.
+            session_id (str): Session identifier.
+            mcp_servers (list | None): List of MCP servers.
+        Returns:
+            ForkSessionResponse: The fork session response.
+        """
         logging.info("Received fork session request for %s", session_id)
         return ForkSessionResponse(
             session_id=session_id,
@@ -255,6 +367,16 @@ class AcpAgentWorkflow(Agent):
         mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
         **kwargs: Any,
     ) -> ResumeSessionResponse:
+        """
+        Resume a previously existing session.
+
+        Args:
+            cwd (str): Current working directory.
+            session_id (str): Session identifier.
+            mcp_servers (list | None): List of MCP servers.
+        Returns:
+            ResumeSessionResponse: The resume session response.
+        """
         logging.info("Received resume session request for %s", session_id)
         return ResumeSessionResponse(
             modes=SessionModeState(available_modes=MODES, current_mode_id=self._mode)
@@ -272,6 +394,15 @@ class AcpAgentWorkflow(Agent):
         session_id: str,
         **kwargs: Any,
     ) -> PromptResponse:
+        """
+        Handle a prompt request from the client, streaming events and updating session state.
+
+        Args:
+            prompt (list): List of content blocks for the prompt.
+            session_id (str): Session identifier.
+        Returns:
+            PromptResponse: The prompt response.
+        """
         logging.info("Received prompt request for session %s", session_id)
         if session_id not in self._sessions:
             self._sessions.add(session_id)
@@ -387,13 +518,35 @@ class AcpAgentWorkflow(Agent):
         return PromptResponse(stop_reason="end_turn")
 
     async def cancel(self, session_id: str, **kwargs: Any) -> None:
+        """
+        Handle a cancel notification for a session.
+
+        Args:
+            session_id (str): Session identifier.
+        """
         logging.info("Received cancel notification for session %s", session_id)
 
     async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle an external method call (not supported).
+
+        Args:
+            method (str): Method name.
+            params (dict): Method parameters.
+        Returns:
+            dict[str, Any]: Error response.
+        """
         logging.info("Received extension method call: %s", method)
         return {"error": "External methods not supported"}
 
     async def ext_notification(self, method: str, params: dict[str, Any]) -> None:
+        """
+        Handle an external notification (not supported).
+
+        Args:
+            method (str): Notification name.
+            params (dict): Notification parameters.
+        """
         logging.info("Received extension notification: %s", method)
 
 
@@ -406,6 +559,20 @@ async def _create_agent(
     mcp_config: McpServersConfig | None = None,
     use_mcp: bool = True,
 ) -> AcpAgentWorkflow:
+    """
+    Create and configure an AcpAgentWorkflow instance.
+
+    Args:
+        llm_model (str | None): LLM model to use.
+        agent_task (str | None): Task description for the agent.
+        tools (list[Tool] | list[DefaultToolType] | None): List of tools to use.
+        mode (str | None): Mode identifier.
+        from_config_file (bool): Whether to load from config file.
+        mcp_config (McpServersConfig | None): MCP configuration.
+        use_mcp (bool): Whether to use MCP.
+    Returns:
+        AcpAgentWorkflow: The configured agent workflow instance.
+    """
     mcp_wrapper: McpWrapper | None = None
     mcp_tools: list[Tool] | None = None
     if use_mcp:
@@ -444,6 +611,18 @@ async def start_agent(
     mcp_config: McpServersConfig | None = None,
     use_mcp: bool = True,
 ):
+    """
+    Start the agent and run the ACP protocol server.
+
+    Args:
+        llm_model (str | None): LLM model to use.
+        agent_task (str | None): Task description for the agent.
+        tools (list[Tool] | list[DefaultToolType] | None): List of tools to use.
+        mode (str | None): Mode identifier.
+        from_config_file (bool): Whether to load from config file.
+        mcp_config (McpServersConfig | None): MCP configuration.
+        use_mcp (bool): Whether to use MCP.
+    """
     logging.basicConfig(
         filename="app.log",
         level=logging.DEBUG,

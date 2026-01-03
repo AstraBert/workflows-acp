@@ -6,6 +6,12 @@ from ..constants import TODO_FILE
 
 
 def _find_git_root() -> Path | None:
+    """
+    Find the root directory of the current git repository.
+
+    Returns:
+        Path | None: The path to the git root, or None if not found.
+    """
     if not (Path.cwd() / ".git").is_dir():
         parents = Path.cwd().parents
         for parent in parents:
@@ -18,6 +24,13 @@ def _find_git_root() -> Path | None:
 def _todo_to_json(
     items: list[str], statuses: list[Literal["pending", "in_progress", "completed"]]
 ) -> None:
+    """
+    Write the TODO items and their statuses to a JSON file, and update .gitignore.
+
+    Args:
+        items (list[str]): List of TODO item descriptions.
+        statuses (list[Literal["pending", "in_progress", "completed"]]): List of statuses for each item.
+    """
     git_root = _find_git_root()
     if git_root is not None:
         (git_root / ".gitignore").touch()
@@ -34,11 +47,26 @@ def _todo_to_json(
 def create_todos(
     items: list[str], statuses: list[Literal["pending", "in_progress", "completed"]]
 ) -> str:
+    """
+    Create a TODO list and save it to a JSON file.
+
+    Args:
+        items (list[str]): List of TODO item descriptions.
+        statuses (list[Literal["pending", "in_progress", "completed"]]): List of statuses for each item.
+    Returns:
+        str: Success message after creating the TODO list.
+    """
     _todo_to_json(items, statuses)
     return "TODO list successfully created!"
 
 
 def list_todos() -> str:
+    """
+    List all TODO items and their statuses in a markdown table format.
+
+    Returns:
+        str: Markdown table of TODOs or a message if none exist.
+    """
     if TODO_FILE.is_file():
         with open(TODO_FILE, "r") as f:
             data = json.load(f)
@@ -52,6 +80,15 @@ def list_todos() -> str:
 def update_todo(
     item: str, status: Literal["pending", "in_progress", "completed"]
 ) -> str:
+    """
+    Update the status of a TODO item.
+
+    Args:
+        item (str): The TODO item to update.
+        status (Literal["pending", "in_progress", "completed"]): The new status for the item.
+    Returns:
+        str: Success or error message.
+    """
     if TODO_FILE.is_file():
         with open(TODO_FILE, "r") as f:
             data = json.load(f)

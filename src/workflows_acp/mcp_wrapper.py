@@ -14,12 +14,29 @@ from .constants import MCP_CONFIG_FILE
 
 
 class StdioMcpServer(TypedDict):
+    """
+    Represents a stdio-based MCP server configuration.
+
+    Args:
+        command (str): The command to run the MCP server.
+        args (list[str]| None): A list of arguments for the command.
+        env (dict[str, Any] | None): A dictionary of environment variables for the command.
+    """
+
     command: str
     args: list[str] | None
     env: dict[str, Any] | None
 
 
 class HttpMcpServer(TypedDict):
+    """
+    Represents an HTTP-based MCP server configuration.
+
+    Args:
+        url (str): The URL of the MCP server.
+        headers (dict[str, Any] | None): A dictionary of headers for the HTTP request.
+    """
+
     url: str
     headers: dict[str, Any] | None
 
@@ -28,14 +45,33 @@ McpServer = Union[StdioMcpServer, HttpMcpServer]
 
 
 class McpServersConfig(TypedDict):
+    """
+    Configuration dictionary for multiple MCP servers.
+
+    Args:
+        mcpServers (dict[str, McpServer]): A dictionary of MCP server configurations.
+    """
+
     mcpServers: dict[str, McpServer]
 
 
 class McpValidationError(Exception):
-    """Raise when we cannot determine whether an MCP uses HTTP/SSE or stdio transport"""
+    """
+    Raised when an MCP server configuration cannot be validated as HTTP/SSE or stdio transport.
+    """
 
 
 def _validate_mcp_server(mcp_server: dict[str, Any]) -> StdioMcpServer | HttpMcpServer:
+    """
+    Validates and returns the MCP server configuration as either StdioMcpServer or HttpMcpServer.
+
+    Args:
+        mcp_server (dict[str, Any]): The MCP server configuration dictionary.
+    Returns:
+        StdioMcpServer | HttpMcpServer: The validated server configuration.
+    Raises:
+        McpValidationError: If neither 'command' nor 'url' is found in the configuration.
+    """
     if "command" in mcp_server:
         return StdioMcpServer(
             command=mcp_server["command"],
@@ -51,9 +87,22 @@ def _validate_mcp_server(mcp_server: dict[str, Any]) -> StdioMcpServer | HttpMcp
 
 
 class McpWrapper:
+    """
+    Wrapper for managing and interacting with multiple MCP servers.
+    """
+
     def __init__(
         self, mcp_servers: dict[str, Any], from_config_dict: bool = False
     ) -> None:
+        """
+        Initialize the McpWrapper instance.
+
+        Args:
+            mcp_servers (dict[str, Any]): MCP servers configuration.
+            from_config_dict (bool): Whether the config is already validated.
+        Raises:
+            ValueError: If no valid MCP servers are provided.
+        """
         if not from_config_dict:
             self.mcp_servers: McpServersConfig = {"mcpServers": {}}
             for server in mcp_servers["mcpServers"]:
@@ -75,6 +124,14 @@ class McpWrapper:
 
     @classmethod
     def from_file(cls) -> "McpWrapper":
+        """
+        Create a McpWrapper instance from a configuration file.
+
+        Returns:
+            McpWrapper: The initialized wrapper.
+        Raises:
+            AssertionError: If the config file is missing or invalid.
+        """
         assert MCP_CONFIG_FILE.exists() and MCP_CONFIG_FILE.is_file(), (
             f"No such file: {str(MCP_CONFIG_FILE)}"
         )
@@ -93,11 +150,25 @@ class McpWrapper:
 
     @classmethod
     def from_config_dict(cls, servers_config: McpServersConfig) -> "McpWrapper":
+        """
+        Create a McpWrapper instance from a configuration dictionary.
+
+        Args:
+            servers_config (McpServersConfig): The MCP servers configuration.
+        Returns:
+            McpWrapper: The initialized wrapper.
+        """
         return cls(
             mcp_servers=cast(dict[str, Any], servers_config), from_config_dict=True
         )
 
     async def all_tools(self) -> list[Tool]:
+        """
+        Retrieve all available tools from all configured MCP servers.
+
+        Returns:
+            list[Tool]: List of available tools from all servers.
+        """
         available_tools: list[Tool] = []
         for server in self.mcp_servers["mcpServers"]:
             session: MCPSession = await self._client.create_session(server_name=server)
@@ -111,6 +182,18 @@ class McpWrapper:
     async def call_tool(
         self, tool_name: str, tool_input: dict[str, Any], server: str
     ) -> Any:
+        """
+        Call a tool on a specified MCP server.
+
+        Args:
+            tool_name (str): Name of the tool (must start with 'mcp_').
+            tool_input (dict[str, Any]): Arguments for the tool.
+            server (str): Server name to call the tool on.
+        Returns:
+            Any: The result of the tool call, or an error message.
+        Raises:
+            AssertionError: If tool_name does not start with 'mcp_'.
+        """
         assert tool_name.startswith("mcp_"), (
             f"Cannot call a non-MCP tool with an MCP client. If {tool_name} this is meant to be an MCP tool, please rename it so that it starts with `mcp_`"
         )

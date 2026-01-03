@@ -69,6 +69,12 @@ class LLMWrapper:
         self.model = model or DEFAULT_MODEL
 
     def add_user_message(self, content: str) -> None:
+        """
+        Add message from the user.
+
+        Args:
+            content (str): Content of the user's message
+        """
         self._chat_history.append(
             Content(role="user", parts=[Part.from_text(text=content)])
         )
@@ -76,6 +82,15 @@ class LLMWrapper:
     async def generate(
         self, schema: Type[StructuredSchemaT]
     ) -> StructuredSchemaT | None:
+        """
+        Generate a response, based on previous chat history, following a JSON schema.
+
+        Args:
+            schema (Type[StructuredSchemaT]): Schema for structured generation by the underlying LLM client. Must be a Pydantic `BaseModel` subclass.
+
+        Returns:
+            SturcturedSchemaT | None: a Pydantic object following the input schema if the generation was successfull, None otherwise.
+        """
         response = await self._client.aio.models.generate_content(
             model=self.model,
             contents=self._chat_history,  # type: ignore
@@ -92,6 +107,15 @@ class LLMWrapper:
         return None
 
     def get_tool(self, tool_name: str) -> Tool:
+        """
+        Get a tool definition by its name.
+
+        Args:
+            tool_name (str): Name of the tool.
+
+        Returns:
+            Tool: tool definition (if the tool is available).
+        """
         tools = [tool for tool in self.tools if tool.name == tool_name]
         assert len(tools) == 1
         return tools[0]

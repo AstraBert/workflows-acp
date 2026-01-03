@@ -4,6 +4,14 @@ import glob
 
 
 def describe_dir_content(directory: str) -> str:
+    """
+    Describe the contents of a directory, listing files and subfolders.
+
+    Args:
+        directory (str): Path to the directory.
+    Returns:
+        str: Description of the directory contents or an error message.
+    """
     if not os.path.exists(directory) or not os.path.isdir(directory):
         return f"No such directory: {directory}"
     children = os.listdir(directory)
@@ -27,6 +35,14 @@ def describe_dir_content(directory: str) -> str:
 
 
 def read_file(file_path: str) -> str:
+    """
+    Read and return the contents of a file.
+
+    Args:
+        file_path (str): Path to the file.
+    Returns:
+        str: File contents or an error message if the file does not exist.
+    """
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return f"No such file: {file_path}"
     with open(file_path, "r") as f:
@@ -34,6 +50,15 @@ def read_file(file_path: str) -> str:
 
 
 def grep_file_content(file_path: str, pattern: str) -> str:
+    """
+    Search for a regex pattern in a file's content and return all matches.
+
+    Args:
+        file_path (str): Path to the file.
+        pattern (str): Regex pattern to search for.
+    Returns:
+        str: List of matches or a message if no matches are found.
+    """
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return f"No such file: {file_path}"
     with open(file_path, "r") as f:
@@ -46,6 +71,15 @@ def grep_file_content(file_path: str, pattern: str) -> str:
 
 
 def glob_paths(directory: str, pattern: str) -> str:
+    """
+    Find all paths in a directory matching a glob pattern.
+
+    Args:
+        directory (str): Path to the directory.
+        pattern (str): Glob pattern to match files or folders.
+    Returns:
+        str: List of matching paths or a message if no matches are found.
+    """
     if not os.path.exists(directory) or not os.path.isdir(directory):
         return f"No such directory: {directory}"
     matches = glob.glob(f"./{directory}/{pattern}")
@@ -55,6 +89,16 @@ def glob_paths(directory: str, pattern: str) -> str:
 
 
 def write_file(file_path: str, content: str, overwrite: bool) -> str:
+    """
+    Write content to a file, optionally overwriting if it exists.
+
+    Args:
+        file_path (str): Path to the file.
+        content (str): Content to write.
+        overwrite (bool): Whether to overwrite the file if it exists.
+    Returns:
+        str: Success or error message.
+    """
     if os.path.exists(file_path) and os.path.isfile(file_path) and not overwrite:
         return f"File {file_path} already exist and overwrite is set to False. Cannot proceed"
     else:
@@ -64,6 +108,17 @@ def write_file(file_path: str, content: str, overwrite: bool) -> str:
 
 
 def edit_file(file_path: str, old_string: str, new_string: str, count: int = -1) -> str:
+    """
+    Replace occurrences of a string in a file with a new string.
+
+    Args:
+        file_path (str): Path to the file.
+        old_string (str): String to be replaced.
+        new_string (str): Replacement string.
+        count (int): Maximum number of replacements (-1 for all).
+    Returns:
+        str: Success or error message.
+    """
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return f"No such file: {file_path}"
     with open(file_path, "r") as f:
