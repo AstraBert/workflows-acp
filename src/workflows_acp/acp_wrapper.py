@@ -13,7 +13,6 @@ from acp import (
     NewSessionResponse,
     PromptResponse,
     SetSessionModeResponse,
-    update_agent_message,
     update_agent_message_text,
     update_agent_thought_text,
     update_tool_call,
@@ -27,7 +26,6 @@ from acp.schema import (
     ListSessionsResponse,
     PromptCapabilities,
     McpCapabilities,
-    AgentMessageChunk,
     AudioContentBlock,
     ClientCapabilities,
     EmbeddedResourceContentBlock,
@@ -82,6 +80,7 @@ class AcpAgentWorkflow(Agent):
         _llm (LLMWrapper): LLM to use with the LlamaIndex Workflow
         _mcp_client (McpWrapper | None): MCP client to use with the LlamaIndex Workflow. None if MCP use is not requested.
     """
+
     _conn: Client
 
     def __init__(

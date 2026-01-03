@@ -10,11 +10,12 @@ class TemplateValidationError(Exception):
 class Template:
     """
     Jinja2-like class for string templating
-    
+
     Attributes:
         content (str): original template string
         _to_render (list[str]): fields of the string that have to be rendered with the template
     """
+
     def __init__(self, content: str):
         """
         Create a template from a string.

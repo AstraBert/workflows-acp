@@ -21,8 +21,9 @@ class AgentWorkflow(Workflow):
 
     Attributes:
         llm (LLMWrapper): LLM that generates thinking, tool calling and observational responses
-        mcp_client (McpWrapper | None): MCP client to interact with MCP tools. None if MCP capabilities are not active. 
+        mcp_client (McpWrapper | None): MCP client to interact with MCP tools. None if MCP capabilities are not active.
     """
+
     def __init__(
         self, llm: LLMWrapper, mcp_client: McpWrapper | None, *args, **kwargs
     ) -> None:
