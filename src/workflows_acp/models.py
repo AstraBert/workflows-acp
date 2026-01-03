@@ -24,6 +24,7 @@ class Thought(BaseModel):
     content: str = Field(description="The content of the thought.")
 
     def to_event(self) -> ThinkingEvent:
+        """Convert the instance into a ThinkingEvent."""
         return ThinkingEvent(**self.model_dump())
 
 
@@ -33,6 +34,7 @@ class Observation(BaseModel):
     content: str = Field(description="The content of the observation.")
 
     def to_event(self) -> PromptEvent:
+        """Convert the instance into a PromptEvent."""
         return PromptEvent(prompt=self.content)
 
 
@@ -71,6 +73,7 @@ class Action(BaseModel):
     )
 
     def to_event(self) -> ToolCallEvent | OutputEvent:
+        """Convert the instance into a ToolCallEvent or into an OutputEvent (based on the action type)."""
         if self.type == "stop":
             assert self.stop is not None
             return OutputEvent(**self.stop.model_dump())
@@ -115,6 +118,16 @@ class Tool(BaseModel):
 
     @classmethod
     def from_mcp_tool(cls, mcp_tool: McpTool, server_name: str) -> "Tool":
+        """
+        Initialize a Tool from an MCP tool.
+
+        Args:
+            mcp_tool (McpTool): Tool as defined by the MCP server
+            server_name: Name of the server in which the tool is defined
+
+        Returns:
+            Tool: Tool definition.
+        """
         return cls(
             name="mcp_" + mcp_tool.name,
             description=mcp_tool.description or "",

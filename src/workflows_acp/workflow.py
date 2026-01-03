@@ -16,6 +16,14 @@ from .models import Thought, Observation, Action
 
 
 class AgentWorkflow(Workflow):
+    """
+    LlamaIndex Workflow that provides the capabilities of an AI agent (thinking, tool calling and observations).
+
+    Attributes:
+        llm (LLMWrapper): LLM that generates thinking, tool calling and observational responses
+        mcp_client (McpWrapper | None): MCP client to interact with MCP tools. None if MCP capabilities are not active.
+    """
+
     def __init__(
         self, llm: LLMWrapper, mcp_client: McpWrapper | None, *args, **kwargs
     ) -> None:
