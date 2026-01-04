@@ -1,6 +1,7 @@
 import json
 import yaml
 import pytest
+import os
 
 from pathlib import Path
 from typer.testing import CliRunner
@@ -127,3 +128,33 @@ def test_rm_mcp_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     with open(tmp_path / ".mcp.json") as f:
         data = json.load(f)
     assert "test" not in data["mcpServers"]
+
+
+def test_load_agentfs_command(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # add some files to avoid having an empty dir
+    (tmp_path / "test.txt").touch()
+    (tmp_path / "test1.txt").touch()
+    (tmp_path / "test2.txt").touch()
+    os.makedirs((tmp_path / "hello"), exist_ok=True)
+    os.makedirs((tmp_path / "hello1"), exist_ok=True)
+    os.makedirs((tmp_path / "hello2"), exist_ok=True)
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(
+        app,
+        [
+            "load-agentfs",
+            "--skip-file",
+            "test.txt",
+            "--skip-file",
+            "test2.txt",
+            "--skip-dir",
+            "hello",
+            "--skip-dir",
+            "hello1",
+        ],
+    )
+    assert result.exit_code == 0
+    assert (tmp_path / "agent.db").exists()

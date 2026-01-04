@@ -565,6 +565,8 @@ async def _create_agent(
     mcp_config: McpServersConfig | None = None,
     use_mcp: bool = True,
     use_agentfs: bool = False,
+    agentfs_skip_files: list[str] | None = None,
+    agentfs_skip_dirs: list[str] | None = None,
 ) -> AcpAgentWorkflow:
     """
     Create and configure an AcpAgentWorkflow instance.
@@ -580,6 +582,19 @@ async def _create_agent(
     Returns:
         AcpAgentWorkflow: The configured agent workflow instance.
     """
+    if use_agentfs:
+        if not AGENTFS_FILE.exists():
+            logging.info(
+                "Loading all files in the current working directory to AgentFS"
+            )
+            await load_all_files(agentfs_skip_dirs, agentfs_skip_files)
+            logging.info(
+                "Finished loading all files in the current working directory to AgentFS"
+            )
+        else:
+            logging.info(
+                f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files."
+            )
     mcp_wrapper: McpWrapper | None = None
     mcp_tools: list[Tool] | None = None
     if use_mcp:
@@ -641,19 +656,6 @@ async def start_agent(
         level=logging.DEBUG,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    if use_agentfs:
-        if not AGENTFS_FILE.exists():
-            logging.info(
-                "Loading all files in the current working directory to AgentFS"
-            )
-            await load_all_files(agentfs_skip_dirs, agentfs_skip_files)
-            logging.info(
-                "Finished loading all files in the current working directory to AgentFS"
-            )
-        else:
-            logging.info(
-                f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files."
-            )
     agent = await _create_agent(
         llm_model=llm_model,
         agent_task=agent_task,
@@ -663,5 +665,7 @@ async def start_agent(
         mcp_config=mcp_config,
         use_mcp=use_mcp,
         use_agentfs=use_agentfs,
+        agentfs_skip_files=agentfs_skip_files,
+        agentfs_skip_dirs=agentfs_skip_dirs,
     )
     await run_agent(agent=agent)

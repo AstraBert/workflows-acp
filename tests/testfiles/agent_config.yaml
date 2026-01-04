@@ -5,3 +5,4 @@ tools: # the following are all the allowed tools
   - write_file
   - read_file
   - edit_file
+  - glob_paths
