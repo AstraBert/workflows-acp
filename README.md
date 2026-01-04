@@ -105,6 +105,34 @@ wfacp add-mcp --name search --transport http --url https://www.search.com/mcp --
 wfacp rm-mcp --name search
 ```
 
+If you wish to disable MCP usage when running the agent, you can do so by running:
+
+```bash
+wfacp run --no-mcp
+```
+
+You can also use the agent with an AgentFS virtual filesystem instead of your real one. While you can load all the files on-the-fly when running the agent, it is advisable to use the `load-agentfs` command:
+
+```bash
+wfacp load-agentfs
+# skipping specific files
+wfacp load-agentfs --skip-file uv.lock --skip-file go.sum
+# skipping specific directories
+wfacp load-agentfs --skip-dir .git --skip-dir .venv
+```
+
+When running the agent, enable AgentFS in this way:
+
+```bash
+wfacp run --agentfs
+# skipping specific files
+wfactp run --agentfs --agentfs-skip-file uv.lock --agentfs-skip-file go.sum
+# skipping specific directories
+wfactp run --agentfs --agentfs-skip-dir .git --agentfs-skip-dir .venv
+```
+
+Read more about AgentFS in the [dedicated section](#).
+
 To run the agent, use an ACP-compatible client such as `toad` or Zed editor.
 
 **With `toad`**
@@ -141,12 +169,12 @@ You can then interact with the agent directly in the IDE.
 
 The following tools are available by default and can be enabled in your `agent_config.yaml`:
 
-- `describe_dir_content`: Describes the contents of a directory, listing files and subfolders.
-- `read_file`: Reads the contents of a file and returns it as a string.
-- `grep_file_content`: Searches for a regex pattern in a file and returns all matches.
-- `glob_paths`: Finds files in a directory matching a glob pattern.
-- `write_file`: Writes content to a file, with an option to overwrite.
-- `edit_file`: Edits a file by replacing occurrences of a string with another string.
+- `describe_dir_content`: Describes the contents of a directory, listing files and subfolders. (available with AgentFS integration)
+- `read_file`: Reads the contents of a file and returns it as a string. (available with AgentFS integration)
+- `grep_file_content`: Searches for a regex pattern in a file and returns all matches. (available with AgentFS integration)
+- `glob_paths`: Finds files in a directory matching a glob pattern. (available with AgentFS integration)
+- `write_file`: Writes content to a file, with an option to overwrite. (available with AgentFS integration)
+- `edit_file`: Edits a file by replacing occurrences of a string with another string. (available with AgentFS integration)
 - `execute_command`: Executes a shell command with arguments. Optionally waits for completion.
 - `bash_output`: Retrieves the stdout and stderr output of a previously started background process by PID.
 - `write_memory`: Writes a memory with content and relevance score to persistent storage.
@@ -155,9 +183,19 @@ The following tools are available by default and can be enabled in your `agent_c
 - `list_todos`: Lists all TODO items and their statuses.
 - `update_todo`: Updates the status of a TODO item.
 
+### AgentFS Integration
+
+`wfacp` integrates with [AgentFS](https://github.com/tursodatabase/agentfs) (a virtual filesystem designed for coding agent) with the following steps:
+
+1. **Initialization**: An `agent.db` file is creted
+2. **Loading**: All the files in the current directory, with the exception of those you explicitly excluded, will be loaded to the `agent.db` database
+3. **Tools**: Instead of loading the normal set of tools, the tools related to filesystem operations are loaded from [agentfs.py](./src/workflows_acp/tools/agentfs.py).
+
+Now every filesystem operation performed by the agent is done on the virtual filesystem, and not on your real one, allowing the agent to perform dangerous and potentially damaging operations without affecting your actual files. 
+
 ### Examples
 
-Find more examples of the CLI usage in the [examples](./examples/) folder.
+Find more examples of the CLI and Python API usage in the [examples](./examples/) folder.
 
 ### Python API
 
