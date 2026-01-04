@@ -274,3 +274,23 @@ def main() -> None:
     # Automatically finds .mcp.json, loads, and validates the config
     asyncio.run(start_agent(from_config_file=True, use_mcp=True))
 ```
+
+You can also integrate with AgentFS:
+
+```python
+import asyncio
+
+from workflows_acp.acp_wrapper import start_agent
+
+def main() -> None:
+    # Automatically loads all the files to AgentFS
+    asyncio.run(
+      start_agent(
+        from_config_file=True, 
+        use_agentfs=True, 
+        agentfs_skip_files=[".env", "uv.lock"], 
+        agentfs_skip_dirs=[".venv", ".git", "__pycache__"]
+      )
+    )
+```
+
