@@ -1,5 +1,7 @@
 import pytest
 import json
+import os
+import logging
 
 from pathlib import Path
 from typing import cast
@@ -23,7 +25,7 @@ from acp.schema import (
 from acp.interfaces import Client
 from workflows_acp.acp_wrapper import _create_agent
 from workflows_acp.constants import DEFAULT_MODEL, VERSION, MODES
-from workflows_acp.tools import TOOLS
+from workflows_acp.tools import TOOLS, filter_tools
 from .conftest import (
     MockWorkflow,
     MockLLMWrapper,
@@ -33,7 +35,7 @@ from .conftest import (
 )
 
 
-def setup_folder(tmp_path: Path) -> None:
+def setup_folder(tmp_path: Path, with_agentfs: bool = False) -> None:
     with open("tests/testfiles/agent_config.yaml", "r") as f:
         content = f.read()
     mcp_file = tmp_path / ".mcp.json"
@@ -42,6 +44,9 @@ def setup_folder(tmp_path: Path) -> None:
     agent_file = tmp_path / "agent_config.yaml"
     with open(agent_file, "w") as f:
         f.write(content)
+    if with_agentfs:
+        agentfs_file = tmp_path / "agent.db"
+        agentfs_file.touch()
 
 
 @pytest.mark.asyncio
@@ -77,9 +82,55 @@ async def test_acp_wrapper_init(
                     "write_file" in tool_names
                     and "edit_file" in tool_names
                     and "read_file" in tool_names
+                    and "glob_paths" in tool_names
                 )
                 assert agent._llm.model == "gemini-3-pro-preview"
                 assert agent._mode == "bypass"
+
+
+@pytest.mark.asyncio
+async def test_acp_wrapper_init_agentfs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    setup_folder(tmp_path, with_agentfs=True)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("GOOGLE_API_KEY", "fake-api-key")
+    with patch("workflows_acp.acp_wrapper.McpWrapper", new=MockMcpWrapper) as _:
+        with patch("workflows_acp.acp_wrapper.LLMWrapper", new=MockLLMWrapper) as _:
+            with patch(
+                "workflows_acp.acp_wrapper.AgentWorkflow", new=MockWorkflow
+            ) as _:
+                with caplog.at_level(logging.DEBUG):
+                    # from programmatic config
+                    agent = await _create_agent(from_config_file=True, use_agentfs=True)
+                    assert (
+                        "Detected agent.db in current working directory, will not load files."
+                        in caplog.text
+                    )
+                    tool_names = [tool.name for tool in agent._llm.tools]
+                    assert (
+                        "write_file" in tool_names
+                        and "edit_file" in tool_names
+                        and "read_file" in tool_names
+                        and "glob_paths" in tool_names
+                    )
+                    # glob_paths has a slightly different description if use_agentfs is provided
+                    assert (
+                        agent._llm.tools[tool_names.index("glob_paths")].description
+                        == filter_tools(names=["glob_paths"], use_agentfs=True)[
+                            0
+                        ].description
+                    )
+                    os.remove(tmp_path / "agent.db")
+                    agent = await _create_agent(from_config_file=True, use_agentfs=True)
+                    assert (
+                        "Loading all files in the current working directory to AgentFS"
+                        in caplog.text
+                        and "Finished loading all files in the current working directory to AgentFS"
+                        in caplog.text
+                    )
 
 
 @pytest.mark.asyncio
