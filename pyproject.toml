@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "workflows-acp"
-version = "0.1.0-alpha.2"
+version = "0.2.0-alpha"
 description = "LlamaIndex Agent Workflows over the ACP wire"
 readme = "README.md"
 requires-python = ">=3.11"
