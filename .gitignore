@@ -19,3 +19,6 @@ wheels/
 
 # todo json file
 .todo.json
+
+# agentfs database
+agent.db*

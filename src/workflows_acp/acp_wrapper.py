@@ -45,7 +45,8 @@ from acp.schema import (
 from .workflow import AgentWorkflow
 from .llm_wrapper import LLMWrapper
 from .models import Tool
-from .tools import TOOLS, DefaultToolType, filter_tools
+from .tools import TOOLS, DefaultToolType, filter_tools, AGENTFS_TOOLS
+from .tools.agentfs import load_all_files
 from .events import (
     InputEvent,
     OutputEvent,
@@ -64,6 +65,7 @@ from .constants import (
     VERSION,
     DEFAULT_MODE_ID,
     MCP_CONFIG_FILE,
+    AGENTFS_FILE,
 )
 
 
@@ -91,6 +93,7 @@ class AcpAgentWorkflow(Agent):
         mode: str | None = None,
         mcp_wrapper: McpWrapper | None = None,
         mcp_tools: list[Tool] | None = None,
+        use_agentfs: bool = False,
     ) -> None:
         """
         Initialize the AcpAgentWorkflow instance.
@@ -108,13 +111,15 @@ class AcpAgentWorkflow(Agent):
         self._session_infos: dict[str, SessionInfo] = {}
         self._mode: str = mode or DEFAULT_MODE_ID
         self._current_tool_call_id: int = 0
-        _impl_tools: list[Tool] = TOOLS
+        _impl_tools: list[Tool] = TOOLS if not use_agentfs else AGENTFS_TOOLS
         if tools is not None:
             first_item = next(iter(tools))
             if isinstance(first_item, Tool):
                 _impl_tools = cast(list[Tool], tools)
             else:
-                _impl_tools = filter_tools(names=cast(list[DefaultToolType], tools))
+                _impl_tools = filter_tools(
+                    names=cast(list[DefaultToolType], tools), use_agentfs=use_agentfs
+                )
         if mcp_tools is not None:
             _impl_tools.extend(mcp_tools)
         self._llm = LLMWrapper(
@@ -127,6 +132,7 @@ class AcpAgentWorkflow(Agent):
         cls,
         mcp_wrapper: McpWrapper | None = None,
         mcp_tools: list[Tool] | None = None,
+        use_agentfs: bool = False,
     ) -> "AcpAgentWorkflow":
         """
         Create an AcpAgentWorkflow instance from a config file.
@@ -149,6 +155,7 @@ class AcpAgentWorkflow(Agent):
             "mode": None,
             "mcp_wrapper": mcp_wrapper,
             "mcp_tools": mcp_tools,
+            "use_agentfs": use_agentfs,
         }
         if "agent_task" in data:
             config["agent_task"] = data["agent_task"]
@@ -557,6 +564,7 @@ async def _create_agent(
     from_config_file: bool = False,
     mcp_config: McpServersConfig | None = None,
     use_mcp: bool = True,
+    use_agentfs: bool = False,
 ) -> AcpAgentWorkflow:
     """
     Create and configure an AcpAgentWorkflow instance.
@@ -589,7 +597,9 @@ async def _create_agent(
         logging.info("MCP tools loaded successfully!")
     if from_config_file:
         return AcpAgentWorkflow.ext_from_config_file(
-            mcp_wrapper=mcp_wrapper, mcp_tools=mcp_tools
+            mcp_wrapper=mcp_wrapper,
+            mcp_tools=mcp_tools,
+            use_agentfs=use_agentfs,
         )
     return AcpAgentWorkflow(
         llm_model=llm_model,
@@ -598,6 +608,7 @@ async def _create_agent(
         mode=mode,
         mcp_wrapper=mcp_wrapper,
         mcp_tools=mcp_tools,
+        use_agentfs=use_agentfs,
     )
 
 
@@ -609,6 +620,9 @@ async def start_agent(
     from_config_file: bool = False,
     mcp_config: McpServersConfig | None = None,
     use_mcp: bool = True,
+    use_agentfs: bool = False,
+    agentfs_skip_files: list[str] | None = None,
+    agentfs_skip_dirs: list[str] | None = None,
 ):
     """
     Start the agent and run the ACP protocol server.
@@ -627,6 +641,19 @@ async def start_agent(
         level=logging.DEBUG,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
+    if use_agentfs:
+        if not AGENTFS_FILE.exists():
+            logging.info(
+                "Loading all files in the current working directory to AgentFS"
+            )
+            await load_all_files(agentfs_skip_dirs, agentfs_skip_files)
+            logging.info(
+                "Finished loading all files in the current working directory to AgentFS"
+            )
+        else:
+            logging.info(
+                f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files."
+            )
     agent = await _create_agent(
         llm_model=llm_model,
         agent_task=agent_task,
@@ -635,5 +662,6 @@ async def start_agent(
         from_config_file=from_config_file,
         mcp_config=mcp_config,
         use_mcp=use_mcp,
+        use_agentfs=use_agentfs,
     )
     await run_agent(agent=agent)

@@ -7,6 +7,7 @@ from rich import print as rprint
 from typer import Typer, Option, Exit
 from typing import Annotated, Literal, Any
 from .tools import DefaultToolType
+from .tools.agentfs import load_all_files
 from .constants import AGENT_CONFIG_FILE, MCP_CONFIG_FILE
 from .mcp_wrapper import (
     HttpMcpServer,
@@ -31,13 +32,74 @@ def main(
             is_flag=True,
         ),
     ] = True,
+    use_agentfs: Annotated[
+        bool,
+        Option(
+            "--agentfs/--no-agentfs",
+            help="Use AgentFS virtual filesystem instead of your real one.",
+            is_flag=True,
+        ),
+    ] = False,
+    agentfs_skip_file: Annotated[
+        list[str],
+        Option(
+            "--agentfs-skip-file",
+            help="Exclude one or more files from being uploaded to AgentFS. Can be used multiple times. Only considered if `--agentfs` is passed.",
+        ),
+    ] = [],
+    agentfs_skip_dir: Annotated[
+        list[str],
+        Option(
+            "--agentfs-skip-dir",
+            help="Exclude one or more directories from being uploaded to AgentFS. Can be used multiple times. Only considered if `--agentfs` is passed.",
+        ),
+    ] = [],
 ) -> None:
     from .acp_wrapper import start_agent
 
     if os.getenv("GOOGLE_API_KEY") is None:
         rprint("[bold red]ERROR[/]\tGOOGLE_API_KEY not set in the environment")
         raise Exit(1)
-    asyncio.run(start_agent(from_config_file=True, use_mcp=use_mcp))
+    asyncio.run(
+        start_agent(
+            from_config_file=True,
+            use_mcp=use_mcp,
+            use_agentfs=use_agentfs,
+            agentfs_skip_dirs=agentfs_skip_dir if len(agentfs_skip_dir) > 0 else None,
+            agentfs_skip_files=agentfs_skip_file
+            if len(agentfs_skip_file) > 0
+            else None,
+        )
+    )
+
+
+@app.command(
+    name="load-agentfs",
+    help="Load all the files in the current directory to AgentFS before running the agent.",
+)
+def load_agentfs(
+    skip_file: Annotated[
+        list[str],
+        Option(
+            "--skip-file",
+            help="Exclude one or more files from being uploaded to AgentFS. Can be used multiple times.",
+        ),
+    ] = [],
+    skip_dir: Annotated[
+        list[str],
+        Option(
+            "--skip-dir",
+            help="Exclude one or more directories from being uploaded to AgentFS. Can be used multiple times.",
+        ),
+    ] = [],
+) -> None:
+    asyncio.run(
+        load_all_files(
+            to_avoid_dirs=skip_dir if len(skip_dir) > 0 else None,
+            to_avoid_files=skip_file if len(skip_file) > 0 else None,
+            progress=True,
+        )
+    )
 
 
 @app.command(

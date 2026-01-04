@@ -63,3 +63,21 @@ MCP_CONFIG_FILE = Path(".mcp.json")
 # Tools
 TODO_FILE = Path(".todo.json")
 MEMORY_FILE = Path(".agent_memory.jsonl")
+AGENTFS_FILE = Path("agent.db")
+DEFAULT_TO_AVOID = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "dist",
+    "build",
+    "wheels",
+]
+DEFAULT_TO_AVOID_FILES = [
+    ".env",
+    "agent.db",
+    "agent.db-wal",
+    "uv.lock",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+]

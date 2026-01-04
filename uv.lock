@@ -15,6 +15,18 @@ wheels = [
 ]
 
 [[package]]
+name = "agentfs-sdk"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyturso" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6b/62/c6cb3b68d10e5e74ec9f3ae47a8b1b798a6cc549f330a7d376ee275a7abd/agentfs_sdk-0.4.1.tar.gz", hash = "sha256:b2d03d7d72f5d6610005f8cc60790cae149fb425348d6c19186f67327704c8fe", size = 27563, upload-time = "2026-01-02T19:18:18.235Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/e4/fda3035031ab146a1d344ea1a504b90027934d22b486c198b9bd8e03ac81/agentfs_sdk-0.4.1-py3-none-any.whl", hash = "sha256:b0b625b68273829895679214ee8dcc25ec355bfaf95d7f3694726cd138ce7d1e", size = 19034, upload-time = "2026-01-02T19:18:17.487Z" },
+]
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1185,6 +1197,26 @@ wheels = [
 ]
 
 [[package]]
+name = "pyturso"
+version = "0.4.0rc17"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ec/cc/aada8d3bd2e67f8d38bad43cec1b72c9eafc6f9e79f5d6bc0b247eee33d9/pyturso-0.4.0rc17.tar.gz", hash = "sha256:3b9a5d39c425c085337f84b1c3e7cfd46ea8a4de439a59c9a04fc6d46538877d", size = 1423097, upload-time = "2025-12-17T08:34:41.596Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/03/acb7e9bf43f38fb59f1956b2bdacc5b8b9e197f179cabefac18425df31fa/pyturso-0.4.0rc17-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:e00b8eb77a2a372b99dbda7b445b374be235a70c37527260cea3e020fded842c", size = 3902415, upload-time = "2025-12-17T08:34:11.295Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/f7/9ae6a015280ea37665b5f98b8ded8884f9e812de1ab16e93bde6c774cb26/pyturso-0.4.0rc17-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:810cd493b54d190cd2757d1efef1f516aabce9b2ffabe813030b8063dc06e7fd", size = 13014740, upload-time = "2025-12-17T08:34:14.005Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/95/83fb263f9d94dc81764edcd0ae48ceceada3d1a3b53fd58cb7921b342245/pyturso-0.4.0rc17-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:277b47261efe19431047bfd5e2d043b45a0c66e42cc0329f9125ccf7dd86960a", size = 3898375, upload-time = "2025-12-17T08:34:16.801Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/7d/f3b3da7b64236f2606599974e7a436a72ec77f3399b47b2c8584ce57fcd3/pyturso-0.4.0rc17-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ff91db467164feb038aea4f5bc82b801d39953645fccb748041774a3336bca7a", size = 13020246, upload-time = "2025-12-17T08:34:19.464Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/86/cfcf1baf3d22f8d877e19ab0cb6cb859be808bb2c14fa4c4a48f2a3ecfbc/pyturso-0.4.0rc17-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:57a0fc0de045412d39e4012da4500b911360a32679c52660e2459ba683c3b909", size = 3898288, upload-time = "2025-12-17T08:34:22.36Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/94/0a9ffdbf15c8041aad858839aa77b4237fee65e6a885ffd19776febd6037/pyturso-0.4.0rc17-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4642698306a595b74eaaa954dfe2c184edb414988c6cbafe1066535205b711d1", size = 13018635, upload-time = "2025-12-17T08:34:25.283Z" },
+    { url = "https://files.pythonhosted.org/packages/df/5a/e5775a9953602090b366b8dce2c4ff07627c787732edb30106e72eeb10e0/pyturso-0.4.0rc17-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:1413c95e533bd4e0874da12c16f04f86bc395736a3da73b018f5d4e769779ce2", size = 3898142, upload-time = "2025-12-17T08:34:27.978Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/aa/1a5a8297ee543051ed2d952e67b773bc653243f63ea4354008adca2e7691/pyturso-0.4.0rc17-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0695a2f4b3a4df7f7e59d603dd5110bd7399c61ddc8437fd2111f8f339718561", size = 13013397, upload-time = "2025-12-17T08:34:32.006Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/0b/894c6d09ee6efe84ec6604e5509e3acc012f206004f6fc027a4e64aa7127/pyturso-0.4.0rc17-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:49c685b20e4b0028f9ef900de5e6d65b6b1199be7e458937130eb53967962986", size = 13011721, upload-time = "2025-12-17T08:34:38.315Z" },
+]
+
+[[package]]
 name = "pywin32"
 version = "311"
 source = { registry = "https://pypi.org/simple" }
@@ -1706,6 +1738,7 @@ version = "0.1.0a2"
 source = { editable = "." }
 dependencies = [
     { name = "agent-client-protocol" },
+    { name = "agentfs-sdk" },
     { name = "google-genai" },
     { name = "llama-index-workflows" },
     { name = "mcp-use" },
@@ -1726,6 +1759,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "agent-client-protocol", specifier = ">=0.7.1" },
+    { name = "agentfs-sdk", specifier = ">=0.4.1" },
     { name = "google-genai", specifier = ">=1.56.0" },
     { name = "llama-index-workflows", specifier = ">=2.11.6" },
     { name = "mcp-use", specifier = ">=1.5.1" },
