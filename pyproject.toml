@@ -11,9 +11,11 @@ requires-python = ">=3.11"
 dependencies = [
     "agent-client-protocol>=0.7.1",
     "agentfs-sdk>=0.4.1",
+    "anthropic>=0.75.0",
     "google-genai>=1.56.0",
     "llama-index-workflows>=2.11.6",
     "mcp-use>=1.5.1",
+    "openai>=2.14.0",
     "psutil>=7.2.1",
     "pyyaml>=6.0.3",
     "typer>=0.21.0",

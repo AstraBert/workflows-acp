@@ -30,6 +30,9 @@ DEFAULT_TASK = """
 Assist the user with their requests, leveraging the tools available to you (as per the `Tools` section) and following the think -> act -> observe pattern detailed in the `Methods` section.
 """
 DEFAULT_MODEL = "gemini-3-flash-preview"
+DEFAULT_GOOGLE_MODEL = "gemini-3-flash-preview"
+DEFAULT_ANTHROPIC_MODEL = "claude-opus-4-5"
+DEFAULT_OPENAI_MODEL = "gpt-4.1"
 AGENTS_MD = Path("AGENTS.md")
 SYSTEM_PROMPT_STRING = """
 ## Main Task

@@ -1,11 +1,10 @@
 import os
 
-from typing import Type
-from google.genai.types import Content, Part, GenerateContentConfig
-from google.genai import Client as GenAIClient
+from typing import Type, Literal
 from .models import Tool, StructuredSchemaT
 from ._templating import Template
 from .constants import SYSTEM_PROMPT_STRING, DEFAULT_MODEL, DEFAULT_TASK, AGENTS_MD
+from .llms import GoogleLLM, OpenAILLM, AnthropicLLM, ChatHistory, ChatMessage
 
 SYSTEM_PROMPT_TEMPLATE = Template(content=SYSTEM_PROMPT_STRING)
 
@@ -26,6 +25,7 @@ class LLMWrapper:
         agent_task: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
+        llm_provider: Literal["google", "anthropic", "openai"] = "google",
     ):
         """
         Initialize LLMWrapper.
@@ -36,11 +36,12 @@ class LLMWrapper:
             api_key (str | None): Optional API key for Google GenAI. Inferred from environment if not provided.
             model (str | None): LLM model to use. Defaults to `gemini-3-flash`.
         """
+        api_key_variable = f"{llm_provider.upper()}_API_KEY"
         if api_key is None:
-            api_key = os.getenv("GOOGLE_API_KEY")
+            api_key = os.getenv(api_key_variable)
         if api_key is None:
             raise ValueError(
-                "GOOGLE_API_KEY not found within the current environment: please export it or provide it to the class constructor."
+                f"{api_key_variable} not found within the current environment: please export it or provide it to the class constructor."
             )
         if not _check_tools(tools=tools):
             raise ValueError("All the tools provided should have different names")
@@ -62,10 +63,14 @@ class LLMWrapper:
             }
         )
         self.tools = tools
-        self._client = GenAIClient(api_key=api_key)
-        self._chat_history: list[Content] = [
-            Content(role="system", parts=[Part.from_text(text=system_prompt)])
-        ]
+        if llm_provider == "anthropic":
+            self._client = AnthropicLLM(api_key=api_key, model=model)
+        elif llm_provider == "openai":
+            self._client = OpenAILLM(api_key=api_key, model=model)
+        else:
+            self._client = GoogleLLM(api_key=api_key, model=model)
+        self._chat_history: ChatHistory = ChatHistory(messages=[])
+        self._chat_history.append(ChatMessage(role="system", content=system_prompt))
         self.model = model or DEFAULT_MODEL
 
     def add_user_message(self, content: str) -> None:
@@ -75,9 +80,7 @@ class LLMWrapper:
         Args:
             content (str): Content of the user's message
         """
-        self._chat_history.append(
-            Content(role="user", parts=[Part.from_text(text=content)])
-        )
+        self._chat_history.append(ChatMessage(role="user", content=content))
 
     async def generate(
         self, schema: Type[StructuredSchemaT]
@@ -91,20 +94,11 @@ class LLMWrapper:
         Returns:
             SturcturedSchemaT | None: a Pydantic object following the input schema if the generation was successfull, None otherwise.
         """
-        response = await self._client.aio.models.generate_content(
-            model=self.model,
-            contents=self._chat_history,  # type: ignore
-            config=GenerateContentConfig(
-                response_json_schema=schema.model_json_schema(),
-                response_mime_type="application/json",
-            ),
+        response = await self._client.generate_content(
+            chat_history=self._chat_history,
+            schema=schema,
         )
-        if response.candidates is not None:
-            if response.candidates[0].content is not None:
-                self._chat_history.append(response.candidates[0].content)
-            if response.text is not None:
-                return schema.model_validate_json(response.text)
-        return None
+        return response
 
     def get_tool(self, tool_name: str) -> Tool:
         """
