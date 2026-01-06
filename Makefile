@@ -6,10 +6,15 @@ test:
 	$(info ****************** running tests ******************)
 	uv run pytest tests/
 
-lint:
+lint-check:
 	$(info ****************** linting ******************)
 	uv run pre-commit run -a
 	uv run ruff check
+
+lint:
+	$(info ****************** linting ******************)
+	uv run pre-commit run -a
+	uv run ruff check --fix
 
 format:
 	$(info ****************** formatting ******************)

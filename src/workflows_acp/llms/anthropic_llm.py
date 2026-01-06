@@ -2,6 +2,7 @@ from anthropic import AsyncAnthropic
 from typing import Type
 
 from .models import ChatHistory, ChatMessage, BaseLLM
+from .retry import retry
 from ..models import StructuredSchemaT
 from ..constants import DEFAULT_ANTHROPIC_MODEL
 
@@ -11,6 +12,7 @@ class AnthropicLLM(BaseLLM):
         super().__init__(api_key, model or DEFAULT_ANTHROPIC_MODEL)
         self._client = AsyncAnthropic(api_key=self.api_key)
 
+    @retry()
     async def generate_content(
         self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
     ) -> StructuredSchemaT | None:

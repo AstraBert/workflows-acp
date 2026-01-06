@@ -2,6 +2,7 @@ from openai import AsyncOpenAI
 from typing import Type
 
 from .models import ChatHistory, ChatMessage, BaseLLM
+from .retry import retry
 from ..models import StructuredSchemaT
 from ..constants import DEFAULT_OPENAI_MODEL
 
@@ -11,6 +12,7 @@ class OpenAILLM(BaseLLM):
         super().__init__(api_key, model or DEFAULT_OPENAI_MODEL)
         self._client = AsyncOpenAI(api_key=self.api_key)
 
+    @retry()
     async def generate_content(
         self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
     ) -> StructuredSchemaT | None:

@@ -2,6 +2,7 @@ from typing import Type
 from google.genai import Client as GenAIClient
 from google.genai.types import GenerateContentConfig
 
+from .retry import retry
 from .models import ChatHistory, ChatMessage, BaseLLM
 from ..models import StructuredSchemaT
 from ..constants import DEFAULT_GOOGLE_MODEL
@@ -12,6 +13,7 @@ class GoogleLLM(BaseLLM):
         super().__init__(api_key, model or DEFAULT_GOOGLE_MODEL)
         self._client = GenAIClient(api_key=self.api_key)
 
+    @retry()
     async def generate_content(
         self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
     ) -> StructuredSchemaT | None:
