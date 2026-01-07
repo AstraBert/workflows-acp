@@ -1,11 +1,11 @@
 import asyncio
-import os
 import json
 import yaml
 
 from rich import print as rprint
 from typer import Typer, Option, Exit
 from typing import Annotated, Literal, Any
+from .models import AvailableModel
 from .tools import DefaultToolType
 from .tools.agentfs import load_all_files
 from .constants import AGENT_CONFIG_FILE, MCP_CONFIG_FILE
@@ -57,9 +57,6 @@ def main(
 ) -> None:
     from .acp_wrapper import start_agent
 
-    if os.getenv("GOOGLE_API_KEY") is None:
-        rprint("[bold red]ERROR[/]\tGOOGLE_API_KEY not set in the environment")
-        raise Exit(1)
     asyncio.run(
         start_agent(
             from_config_file=True,
@@ -106,7 +103,10 @@ def load_agentfs(
     name="model", help="Add/modify the LLM model in the agent configuration file"
 )
 def set_model(
-    model: Annotated[str, Option("--model", "-m", help="Gemini model to use")],
+    model: Annotated[
+        AvailableModel,
+        Option("--model", "-m", help="LLM model to use", show_choices=True),
+    ],
 ) -> None:
     _from_scratch = False
     if not AGENT_CONFIG_FILE.exists():

@@ -67,7 +67,7 @@ async def test_acp_wrapper_init(
                 for i, tool in enumerate(agent._llm.tools):
                     assert tool.name == TOOLS[i].name
                 assert agent._mode == "ask"
-                assert agent._llm.model == DEFAULT_MODEL
+                assert agent._llm.model == DEFAULT_MODEL["google"]
                 assert agent._mcp_client is not None
                 assert agent._mcp_client.mcp_servers == MCP_CONFIG_ONE
                 # without MCP

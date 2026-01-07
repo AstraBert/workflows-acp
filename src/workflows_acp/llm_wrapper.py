@@ -71,7 +71,7 @@ class LLMWrapper:
             self._client = GoogleLLM(api_key=api_key, model=model)
         self._chat_history: ChatHistory = ChatHistory(messages=[])
         self._chat_history.append(ChatMessage(role="system", content=system_prompt))
-        self.model = model or DEFAULT_MODEL
+        self.model = model or DEFAULT_MODEL[llm_provider]
 
     def add_user_message(self, content: str) -> None:
         """

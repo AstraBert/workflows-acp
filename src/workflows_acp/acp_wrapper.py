@@ -66,6 +66,8 @@ from .constants import (
     DEFAULT_MODE_ID,
     MCP_CONFIG_FILE,
     AGENTFS_FILE,
+    AVAILABLE_MODELS,
+    DEFAULT_GOOGLE_MODEL,
 )
 
 
@@ -122,8 +124,12 @@ class AcpAgentWorkflow(Agent):
                 )
         if mcp_tools is not None:
             _impl_tools.extend(mcp_tools)
+        llm_model = llm_model or DEFAULT_GOOGLE_MODEL
         self._llm = LLMWrapper(
-            tools=_impl_tools, agent_task=agent_task, model=llm_model
+            tools=_impl_tools,
+            agent_task=agent_task,
+            model=llm_model,
+            llm_provider=AVAILABLE_MODELS[llm_model],
         )
         self._mcp_client = mcp_wrapper
 
@@ -160,6 +166,10 @@ class AcpAgentWorkflow(Agent):
         if "agent_task" in data:
             config["agent_task"] = data["agent_task"]
         if "model" in data:
+            if data["model"] not in AVAILABLE_MODELS:
+                raise ValueError(
+                    f"Cannot use {data['model']} as LLM model. Choose one among: {', '.join(list(AVAILABLE_MODELS.keys()))}"
+                )
             config["llm_model"] = data["model"]
         if "tools" in data:
             assert isinstance(data["tools"], list)

@@ -29,7 +29,7 @@ def test_llm_wrapper_init(
     setup_folder(tmp_path)
     monkeypatch.chdir(tmp_path)
     llm = LLMWrapper(tools=[HELLO_TOOL], api_key="fake-api-key")
-    assert llm.model == DEFAULT_MODEL
+    assert llm.model == DEFAULT_MODEL["google"]
     assert llm.tools == [HELLO_TOOL]
     assert llm._chat_history.messages[0].role == "system"
     assert llm._chat_history.messages[0].content == Template(

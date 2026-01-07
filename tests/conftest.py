@@ -1,4 +1,4 @@
-from typing import Any, AsyncGenerator, Type
+from typing import Any, AsyncGenerator, Type, Literal
 from mcp_use.client.session import Tool as McpTool
 from workflows.events import Event
 from workflows_acp.models import Stop, Action, Tool
@@ -150,8 +150,9 @@ class MockLLMWrapper(LLMWrapper):
         agent_task: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
+        llm_provider: Literal["google", "anthropic", "openai"] = "google",
     ):
-        super().__init__(tools, agent_task, api_key, model)
+        super().__init__(tools, agent_task, api_key, model, llm_provider)
         self._client = MockLLM(api_key="", model="")
 
 
