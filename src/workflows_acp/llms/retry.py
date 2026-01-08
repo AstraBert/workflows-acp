@@ -23,7 +23,7 @@ def retry(
                 except Exception as e:
                     exception = e
                     if backoff_pattern == "linear":
-                        delay = min(max_retry_interval, retry_interval * retries)
+                        delay = min(max_retry_interval, retry_interval * (retries + 1))
                     else:
                         delay = min(max_retry_interval, retry_interval * (2**retries))
                     retries += 1

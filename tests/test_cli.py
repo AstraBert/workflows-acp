@@ -19,6 +19,13 @@ def test_model_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert data["model"] == "gemini-3-flash-preview"
 
 
+def test_model_command_unsupported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["model", "--model", "gpt-4o"])
+    assert result.exit_code == 2
+    assert not (tmp_path / "agent_config.yaml").exists()
+
+
 def test_add_tool_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["add-tool", "--tool", "read_file"])
