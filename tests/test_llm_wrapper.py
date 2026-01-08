@@ -7,7 +7,7 @@ from workflows_acp.constants import DEFAULT_MODEL, DEFAULT_TASK, SYSTEM_PROMPT_S
 from workflows_acp.tools import TOOLS
 from workflows_acp.llm_wrapper import LLMWrapper
 from workflows_acp.models import Action, Tool
-from .conftest import MockGenAIClient
+from .conftest import MockLLM
 
 
 def say_hello() -> str:
@@ -29,11 +29,12 @@ def test_llm_wrapper_init(
     setup_folder(tmp_path)
     monkeypatch.chdir(tmp_path)
     llm = LLMWrapper(tools=[HELLO_TOOL], api_key="fake-api-key")
-    assert llm.model == DEFAULT_MODEL
+    assert llm.model == DEFAULT_MODEL["google"]
     assert llm.tools == [HELLO_TOOL]
-    assert isinstance(llm._chat_history[0].parts, list)
-    assert llm._chat_history[0].role == "system"
-    assert llm._chat_history[0].parts[0].text == Template(SYSTEM_PROMPT_STRING).render(
+    assert llm._chat_history.messages[0].role == "system"
+    assert llm._chat_history.messages[0].content == Template(
+        SYSTEM_PROMPT_STRING
+    ).render(
         {
             "task": DEFAULT_TASK,
             "tools": "\n\n".join([tool.to_string() for tool in llm.tools]),
@@ -54,17 +55,16 @@ def test_llm_wrapper_init(
 def test_llm_wrapper_methods() -> None:
     llm = LLMWrapper(tools=TOOLS, api_key="fake-api-key")
     llm.add_user_message("hello there")
-    assert len(llm._chat_history) == 2
-    assert isinstance(llm._chat_history[1].parts, list)
-    assert llm._chat_history[1].role == "user"
-    assert llm._chat_history[1].parts[0].text == "hello there"
+    assert len(llm._chat_history.messages) == 2
+    assert llm._chat_history.messages[1].role == "user"
+    assert llm._chat_history.messages[1].content == "hello there"
     tool = llm.get_tool("write_file")
     assert tool.name == "write_file"
 
 
 @pytest.mark.asyncio
 async def test_llm_wrapper_generate() -> None:
-    with patch("workflows_acp.llm_wrapper.GenAIClient", new=MockGenAIClient) as _:
+    with patch("workflows_acp.llm_wrapper.GoogleLLM", new=MockLLM) as _:
         llm = LLMWrapper(tools=[HELLO_TOOL], api_key="fake-api-key")
         result = await llm.generate(schema=Action)
         assert result is not None
@@ -72,7 +72,6 @@ async def test_llm_wrapper_generate() -> None:
         assert result.stop is not None
         assert result.stop.stop_reason == "I am done"
         assert result.stop.final_output == "this is a final result"
-        assert len(llm._chat_history) == 2
-        assert isinstance(llm._chat_history[1].parts, list)
-        assert llm._chat_history[1].role == "assistant"
-        assert llm._chat_history[1].parts[0].text == result.model_dump_json()
+        assert len(llm._chat_history.messages) == 2
+        assert llm._chat_history.messages[1].role == "assistant"
+        assert llm._chat_history.messages[1].content == result.model_dump_json()

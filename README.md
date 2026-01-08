@@ -31,7 +31,7 @@ wfacp --help
 
 ## Usage
 
-To use the CLI and Python API, set your `GOOGLE_API_KEY` in the environment:
+To use the CLI and Python API, set your `GOOGLE_API_KEY`/`OPENAI_API_KEY`/`ANTHROPIC_API_KEY` (based on your [LLM provider](#available-llm-models)) in the environment:
 
 ```bash
 export GOOGLE_API_KEY="my-api-key"
@@ -70,6 +70,8 @@ wfacp mode -m bypass
 # Set or change the model
 wfacp model -m gemini-3-pro-preview
 ```
+
+`workflows-acp` supports a [list of models](#available-llm-models) provided by OpenAI, Anthropic and Google.
 
 To use the agent with MCP servers, create a `.mcp.json` file with server definitions:
 
@@ -131,7 +133,7 @@ wfactp run --agentfs --agentfs-skip-file uv.lock --agentfs-skip-file go.sum
 wfactp run --agentfs --agentfs-skip-dir .git --agentfs-skip-dir .venv
 ```
 
-Read more about AgentFS in the [dedicated section](#).
+Read more about AgentFS in the [dedicated section](#agentfs-integration).
 
 To run the agent, use an ACP-compatible client such as `toad` or Zed editor.
 
@@ -164,6 +166,30 @@ Add the following to your `settings.json`:
 ```
 
 You can then interact with the agent directly in the IDE.
+
+### Available LLM Models
+
+The following LLM models are supported and can be selected in your `agent_config.yaml` or via CLI/python API:
+
+**Google**
+- gemini-2.5-flash
+- gemini-2.5-flash-lite
+- gemini-2.5-pro
+- gemini-3-flash-preview
+- gemini-3-pro-preview
+
+**Anthropic**
+- claude-opus-4-5
+- claude-sonnet-4-5
+- claud-haiku-4-5
+- claude-opus-4-1
+- claude-sonnet-4-0
+
+**OpenAI**
+- gpt-4.1
+- gpt-5
+- gpt-5.1
+- gpt-5.2
 
 ### Available tools by default
 
@@ -226,7 +252,7 @@ db_tool = Tool(
 )
 
 task = "You are an accountant who needs to help the user with their expenses (`expenses` table in the database), and you can do so by using the `query_database` tool and perform mathematical operations with the `add` tool"
-model = "gemini-2.5-flash"
+model = "gpt-5.2" # you can use any model among the supported ones
 
 def main() -> None:
     asyncio.run(start_agent(tools=[db_tool, add_tool], agent_task=task, llm_model=model, use_mcp=False))

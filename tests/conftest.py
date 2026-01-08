@@ -1,11 +1,4 @@
-from google.genai.types import (
-    Content,
-    GenerateContentResponse,
-    Candidate,
-    Part,
-)
-from google.genai import Client as GenAIClient
-from typing import Any, AsyncGenerator, cast
+from typing import Any, AsyncGenerator, Type, Literal
 from mcp_use.client.session import Tool as McpTool
 from workflows.events import Event
 from workflows_acp.models import Stop, Action, Tool
@@ -23,47 +16,30 @@ from workflows_acp.mcp_wrapper import (
     McpServersConfig,
     McpWrapper,
 )
+from workflows_acp.llms.models import BaseLLM, ChatHistory, ChatMessage
+from workflows_acp.models import StructuredSchemaT
 from acp.schema import RequestPermissionResponse, AllowedOutcome
 
 
-class MockModels:
-    async def generate_content(self, *args, **kwargs) -> GenerateContentResponse:
-        return GenerateContentResponse(
-            candidates=[
-                Candidate(
-                    content=Content(
-                        role="assistant",
-                        parts=[
-                            Part.from_text(
-                                text=Action(
-                                    type="stop",
-                                    stop=Stop(
-                                        stop_reason="I am done",
-                                        final_output="this is a final result",
-                                    ),
-                                    tool_call=None,
-                                ).model_dump_json()
-                            )
-                        ],
-                    )
-                )
-            ]
+class MockLLM(BaseLLM):
+    def __init__(self, api_key: str, model: str) -> None:
+        super().__init__(api_key, model)
+
+    async def generate_content(
+        self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
+    ) -> StructuredSchemaT | None:
+        model = Action(
+            type="stop",
+            stop=Stop(
+                stop_reason="I am done",
+                final_output="this is a final result",
+            ),
+            tool_call=None,
         )
-
-
-class MockAio:
-    @property
-    def models(self):
-        return MockModels()
-
-
-class MockGenAIClient:
-    def __init__(self, api_key: str) -> None:
-        return None
-
-    @property
-    def aio(self) -> MockAio:
-        return MockAio()
+        chat_history.append(
+            ChatMessage(role="assistant", content=model.model_dump_json())
+        )
+        return model  # type: ignore
 
 
 class MockMcpSession:
@@ -174,9 +150,10 @@ class MockLLMWrapper(LLMWrapper):
         agent_task: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
+        llm_provider: Literal["google", "anthropic", "openai"] = "google",
     ):
-        super().__init__(tools, agent_task, api_key, model)
-        self._client = cast(GenAIClient, MockGenAIClient(api_key=""))
+        super().__init__(tools, agent_task, api_key, model, llm_provider)
+        self._client = MockLLM(api_key="", model="")
 
 
 class MockACPClient:
