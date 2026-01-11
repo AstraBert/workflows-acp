@@ -1,4 +1,4 @@
-from google.genai.types import Content
+from google.genai.types import Content, Part
 from workflows_acp.llms.models import ChatHistory, ChatMessage
 
 
@@ -18,6 +18,9 @@ def test_chat_message_conversion() -> None:
     ant_message = message.to_anthropic_message()
     assert isinstance(ant_message, str)
     assert ant_message == message.content
+    google_message = message.to_google_message()
+    assert isinstance(google_message, Part)
+    assert google_message.text == message.content
     message.role = "user"
     openai_message = message.to_openai_message()
     assert isinstance(openai_message, dict)
@@ -36,14 +39,21 @@ def test_chat_history() -> None:
     assert len(chat_history.messages) == 3
     assert chat_history.messages[2].role == "assistant"
     assert chat_history.messages[2].content == "hello"
-    google_chat_history = chat_history.to_google_message_history()
+    system_prompt, google_chat_history = chat_history.to_google_message_history()
     assert isinstance(google_chat_history, list)
-    assert len(google_chat_history) == len(chat_history.messages)
+    assert len(google_chat_history) == len(chat_history.messages) - 1
     for i, google_msg in enumerate(google_chat_history):
-        assert google_msg.role == chat_history.messages[i].role
+        if chat_history.messages[i + 1].role == "user":
+            assert google_msg.role == chat_history.messages[i + 1].role
+        else:
+            assert google_msg.role == "model"
         assert isinstance(google_msg.parts, list)
         assert len(google_msg.parts) == 1
-        assert google_msg.parts[0].text == chat_history.messages[i].content
+        assert google_msg.parts[0].text == chat_history.messages[i + 1].content
+    assert isinstance(system_prompt, list)
+    assert len(system_prompt) == 1
+    assert isinstance(system_prompt[0], Part)
+    assert system_prompt[0].text == messages[0].content
     system, ant_chat_history = chat_history.to_anthropic_message_history()
     assert isinstance(system, str)
     assert system == chat_history.messages[0].content

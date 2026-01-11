@@ -17,8 +17,12 @@ class ChatMessage:
     role: Literal["user", "assistant", "system"]
     content: str
 
-    def to_google_message(self) -> Content:
-        return Content(role=self.role, parts=[Part.from_text(text=self.content)])
+    def to_google_message(self) -> Content | Part:
+        if self.role != "system":
+            role = self.role if self.role == "user" else "model"
+            return Content(role=role, parts=[Part.from_text(text=self.content)])
+        else:
+            return Part.from_text(text=self.content)
 
     def to_openai_message(self) -> EasyInputMessageParam:
         return EasyInputMessageParam(
@@ -38,8 +42,18 @@ class ChatHistory:
     def append(self, message: ChatMessage) -> None:
         self.messages.append(message)
 
-    def to_google_message_history(self) -> list[Content]:
-        return [message.to_google_message() for message in self.messages]
+    def to_google_message_history(self) -> tuple[list[Part], list[Content]]:
+        system_prompt: list[Part] = [
+            cast(Part, message.to_google_message())
+            for message in self.messages
+            if message.role == "system"
+        ]
+        contents: list[Content] = [
+            cast(Content, message.to_google_message())
+            for message in self.messages
+            if message.role != "system"
+        ]
+        return system_prompt, contents
 
     def to_openai_message_history(self) -> list[Any]:
         return [message.to_openai_message() for message in self.messages]

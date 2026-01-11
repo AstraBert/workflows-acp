@@ -9,7 +9,6 @@ from workflows_acp.models import (
     Thought,
     Observation,
     ToolCall,
-    ToolCallArg,
     Stop,
 )
 from workflows_acp.events import (
@@ -132,13 +131,10 @@ def test_model_to_event() -> None:
     assert isinstance(obs_event, PromptEvent)
     assert obs_event.prompt == "hello"
     action_tc = Action(
-        type="tool_call",
+        action_type="tool_call",
         tool_call=ToolCall(
             tool_name="add",
-            tool_input=[
-                ToolCallArg(arg_name="x", arg_value=1),
-                ToolCallArg(arg_name="y", arg_value=2),
-            ],
+            tool_input='{"x": 1, "y": 2}',
         ),
         stop=None,
     )
@@ -147,7 +143,9 @@ def test_model_to_event() -> None:
     assert action_tc_event.tool_input == {"x": 1, "y": 2}
     assert action_tc_event.tool_name == "add"
     action_st = Action(
-        type="stop", tool_call=None, stop=Stop(stop_reason="why", final_output="hello")
+        action_type="stop",
+        tool_call=None,
+        stop=Stop(stop_reason="why", final_output="hello"),
     )
     action_st_event = action_st.to_event()
     assert isinstance(action_st_event, OutputEvent)
@@ -156,7 +154,7 @@ def test_model_to_event() -> None:
     assert action_st_event.stop_reason == "why"
 
     with pytest.raises(AssertionError):
-        Action(type="stop", tool_call=None, stop=None).to_event()
+        Action(action_type="stop", tool_call=None, stop=None).to_event()
 
     with pytest.raises(AssertionError):
-        Action(type="tool_call", tool_call=None, stop=None).to_event()
+        Action(action_type="tool_call", tool_call=None, stop=None).to_event()

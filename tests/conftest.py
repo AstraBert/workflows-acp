@@ -29,7 +29,7 @@ class MockLLM(BaseLLM):
         self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
     ) -> StructuredSchemaT | None:
         model = Action(
-            type="stop",
+            action_type="stop",
             stop=Stop(
                 stop_reason="I am done",
                 final_output="this is a final result",

@@ -54,20 +54,17 @@ class Observation(BaseModel):
         return PromptEvent(prompt=self.content)
 
 
-class ToolCallArg(BaseModel):
-    """Represents a single argument for a tool call."""
-
-    arg_name: str = Field(description="The name of the argument for the tool call.")
-    arg_value: Any = Field(description="The value of the argument for the tool call.")
-
-
 class ToolCall(BaseModel):
     """Represents a call to a tool with its input arguments."""
 
     tool_name: str = Field(description="The name of the tool to call.")
-    tool_input: list[ToolCallArg] = Field(
-        description="The list of arguments to pass to the tool."
+    tool_input: str = Field(
+        description="A JSON-serializable string representing the input for the tool, based on the tool's schema. Example: '{'file_path': 'hello.py'}'. Produce only complete JSON."
     )
+
+    def args_to_dict(self) -> dict[str, Any]:
+        # let the error bubble up if serdes op fails
+        return json.loads(self.tool_input)
 
 
 class Stop(BaseModel):
@@ -80,7 +77,9 @@ class Stop(BaseModel):
 class Action(BaseModel):
     """Represents an action, which can be a tool call, stop action, or ask human action."""
 
-    type: ActionType = Field(description="The type of action: 'tool_call' or 'stop'.")
+    action_type: ActionType = Field(
+        description="The type of action: 'tool_call' or 'stop'."
+    )
     tool_call: ToolCall | None = Field(
         description="The tool call details if the action is a tool call, otherwise None."
     )
@@ -90,15 +89,15 @@ class Action(BaseModel):
 
     def to_event(self) -> ToolCallEvent | OutputEvent:
         """Convert the instance into a ToolCallEvent or into an OutputEvent (based on the action type)."""
-        if self.type == "stop":
+        if self.action_type == "stop":
             assert self.stop is not None
             return OutputEvent(**self.stop.model_dump())
         else:
             assert self.tool_call is not None
-            args = {}
-            for arg in self.tool_call.tool_input:
-                args[arg.arg_name] = arg.arg_value
-            return ToolCallEvent(tool_name=self.tool_call.tool_name, tool_input=args)
+            return ToolCallEvent(
+                tool_name=self.tool_call.tool_name,
+                tool_input=self.tool_call.args_to_dict(),
+            )
 
 
 class ParameterMetadata(TypedDict):

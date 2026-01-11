@@ -22,7 +22,9 @@ async def test_google_llm_generate() -> None:
     with patch.object(GenAIClient, "aio", new_callable=PropertyMock) as mock_aio:
         mock_generate = AsyncMock()
         content = Action(
-            type="stop", tool_call=None, stop=Stop(stop_reason="", final_output="")
+            action_type="stop",
+            tool_call=None,
+            stop=Stop(stop_reason="", final_output=""),
         ).model_dump_json()
         mock_generate.return_value = GenerateContentResponse(
             candidates=[

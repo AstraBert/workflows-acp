@@ -1,4 +1,5 @@
 from anthropic import AsyncAnthropic
+from anthropic.types.beta.beta_message_param import BetaMessageParam
 from typing import Type
 
 from .models import ChatHistory, ChatMessage, BaseLLM
@@ -17,6 +18,14 @@ class AnthropicLLM(BaseLLM):
         self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
     ) -> StructuredSchemaT | None:
         system, messages = chat_history.to_anthropic_message_history()
+        if messages[-1]["role"] == "assistant":
+            # only happens when the LLM is prompted to take an action after thinking
+            messages.append(
+                BetaMessageParam(
+                    content="Based on the previous message history, decide what action to take.",
+                    role="user",
+                )
+            )
         response = await self._client.beta.messages.parse(
             max_tokens=8192,
             output_format=schema,

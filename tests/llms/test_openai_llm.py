@@ -29,7 +29,9 @@ async def test_openai_llm_generate() -> None:
     ) as mock_responses:
         mock_parse = AsyncMock()
         content = Action(
-            type="stop", tool_call=None, stop=Stop(stop_reason="", final_output="")
+            action_type="stop",
+            tool_call=None,
+            stop=Stop(stop_reason="", final_output=""),
         ).model_dump_json()
         block = ParsedResponseOutputText[Action](
             text=content,

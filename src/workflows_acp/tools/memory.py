@@ -29,8 +29,13 @@ def write_memory(content: str, relevance: Annotated[int, ">=0,=<100"]) -> str:
     if not MEMORY_FILE.is_file():
         git_root = _find_git_root()
         if git_root is not None:
-            with open(git_root / ".gitignore", "a") as f:
-                f.write("\n# memory jsonl file\n.agent_memory.jsonl\n")
+            (git_root / ".gitignore").touch()
+            if (
+                "\n# memory jsonl file\n.agent_memory.jsonl\n"
+                not in (git_root / ".gitignore").read_text()
+            ):
+                with open(git_root / ".gitignore", "a") as f:
+                    f.write("\n# memory jsonl file\n.agent_memory.jsonl\n")
         mem_payload = MemoryPiece(content=content, relevance=relevance, id_=0)
         with open(MEMORY_FILE, "w") as f:
             s = json.dumps(mem_payload) + "\n"
