@@ -9,7 +9,7 @@ from anthropic.types.beta.parsed_beta_message import (
 from anthropic.types.beta.beta_usage import BetaUsage
 from workflows_acp.constants import DEFAULT_ANTHROPIC_MODEL, DEFAULT_MODEL
 from workflows_acp.models import Action, Stop
-from workflows_acp.llms.models import ChatHistory
+from workflows_acp.llms.models import ChatHistory, ChatMessage
 from workflows_acp.llms.anthropic_llm import AnthropicLLM
 
 
@@ -26,7 +26,9 @@ async def test_anthropic_llm_generate() -> None:
     with patch.object(AsyncAnthropic, "beta", new_callable=PropertyMock) as mock_beta:
         mock_parse = AsyncMock()
         content = Action(
-            type="stop", tool_call=None, stop=Stop(stop_reason="", final_output="")
+            action_type="stop",
+            tool_call=None,
+            stop=Stop(stop_reason="", final_output=""),
         ).model_dump_json()
         block = ParsedBetaTextBlock[Action](
             text=content, type="text", parsed_output=Action.model_validate_json(content)
@@ -44,7 +46,10 @@ async def test_anthropic_llm_generate() -> None:
 
         llm = AnthropicLLM(api_key="fake-api-key")
         response = await llm.generate_content(
-            schema=Action, chat_history=ChatHistory(messages=[])
+            schema=Action,
+            chat_history=ChatHistory(
+                messages=[ChatMessage(role="user", content="hello")]
+            ),
         )
         assert response is not None
         assert isinstance(response, Action)

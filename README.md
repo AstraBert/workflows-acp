@@ -181,7 +181,7 @@ The following LLM models are supported and can be selected in your `agent_config
 **Anthropic**
 - claude-opus-4-5
 - claude-sonnet-4-5
-- claud-haiku-4-5
+- claude-haiku-4-5
 - claude-opus-4-1
 - claude-sonnet-4-0
 

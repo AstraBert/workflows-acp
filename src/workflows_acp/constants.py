@@ -46,7 +46,7 @@ AVAILABLE_MODELS: dict[str, Literal["google", "anthropic", "openai"]] = {
     "gemini-3-pro-preview": "google",
     "claude-opus-4-5": "anthropic",
     "claude-sonnet-4-5": "anthropic",
-    "claud-haiku-4-5": "anthropic",
+    "claude-haiku-4-5": "anthropic",
     "claude-opus-4-1": "anthropic",
     "claude-sonnet-4-0": "anthropic",
     "gpt-4.1": "openai",

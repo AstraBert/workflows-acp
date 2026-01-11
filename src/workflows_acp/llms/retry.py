@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from functools import wraps
 from typing import TypeVar, Callable, Awaitable, Literal, cast
 from pydantic import BaseModel
@@ -21,6 +22,9 @@ def retry(
                 try:
                     return await f(*args, **kwargs)
                 except Exception as e:
+                    logging.debug(
+                        f"Got exception: {e}. Retrying ({retries}/{max_retries})..."
+                    )
                     exception = e
                     if backoff_pattern == "linear":
                         delay = min(max_retry_interval, retry_interval * (retries + 1))

@@ -17,12 +17,14 @@ class GoogleLLM(BaseLLM):
     async def generate_content(
         self, schema: Type[StructuredSchemaT], chat_history: ChatHistory
     ) -> StructuredSchemaT | None:
+        system_prompt, messages = chat_history.to_google_message_history()
         response = await self._client.aio.models.generate_content(
             model=self.model,
-            contents=chat_history.to_google_message_history(),
+            contents=messages,
             config=GenerateContentConfig(
                 response_json_schema=schema.model_json_schema(),
                 response_mime_type="application/json",
+                system_instruction=system_prompt,
             ),
         )
         if response.candidates is not None:
