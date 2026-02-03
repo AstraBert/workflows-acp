@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import cast
 
-from telegram import Document, Update
+from telegram import Update
 from telegram.constants import ReactionEmoji
 from telegram.ext import (
     Application,
