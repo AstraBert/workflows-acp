@@ -7,7 +7,7 @@ name = "llamagram"
 version = "0.1.0"
 description = "Background AI assistant working as a Telegram bot, built specifically for document-related use cases"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "llama-cloud>=1.2.0",
     "python-telegram-bot>=22.6",

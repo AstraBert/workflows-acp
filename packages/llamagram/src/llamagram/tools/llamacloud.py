@@ -35,7 +35,7 @@ async def _upload_file(
     file_path: str,
     purpose: Literal["parse", "classify", "extract", "sheet", "split", "agent_app"],
 ) -> str:
-    data_type, _ = mimetypes.guess_file_type(file_path)
+    data_type, _ = mimetypes.guess_type(file_path)
     file_content = await _read_file_from_agentfs(file_path)
     file_to_upload = (
         file_path,
