@@ -34,3 +34,26 @@ You have read and write access to the filesystem, and you should use that to ret
 You should use memory tools as much as you can, so that you can persist previous interaction with your user.
 TODO-tracking tools should be used as well, but only with complex, multi-step tasks.
 """
+SPECIAL_CHARS = [
+    "\\",
+    "_",
+    "*",
+    "[",
+    "]",
+    "(",
+    ")",
+    "~",
+    "`",
+    ">",
+    "<",
+    "&",
+    "#",
+    "+",
+    "-",
+    "=",
+    "|",
+    "{",
+    "}",
+    ".",
+    "!",
+]

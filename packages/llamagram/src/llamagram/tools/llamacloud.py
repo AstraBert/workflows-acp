@@ -27,7 +27,7 @@ async def _read_file_from_agentfs(file_path: str) -> bytes:
     agentfs = await configure_agentfs()
     if not await _is_accessible_path(agentfs, file_path, "file"):
         raise FileNotFoundError(f"no such file or directory: {file_path}")
-    content = await agentfs.fs.read_file(file_path)
+    content = await agentfs.fs.read_file(file_path, encoding=None)
     return content if isinstance(content, bytes) else content.encode("utf-8")
 
 
@@ -55,9 +55,7 @@ async def parse_file_content(file_path: str) -> str:
     except FileNotFoundError:
         return f"No such file: {file_path}"
     result = await LLAMA_CLOUD_CLIENT.parsing.parse(
-        tier="fast",
-        version="latest",
-        file_id=file_id,
+        tier="fast", version="latest", file_id=file_id, expand=["text"]
     )
     if result.job.status in ("FAILED", "CANCELLED") or result.text is None:
         return f"It was not possible to parse the content of {file_path}: {result.job.error_message}"

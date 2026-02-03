@@ -22,3 +22,6 @@ wheels/
 
 # agentfs database
 agent.db*
+
+# env variables
+.env

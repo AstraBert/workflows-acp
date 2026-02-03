@@ -9,6 +9,7 @@ description = "Background AI assistant working as a Telegram bot, built specific
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiofiles>=25.1.0",
     "llama-cloud>=1.2.0",
     "python-telegram-bot>=22.6",
     "random-name>=0.1.1",

@@ -1,9 +1,10 @@
 import asyncio
 import logging
 import os
+from pathlib import Path
 from typing import cast
 
-from telegram import Update
+from telegram import Document, Update
 from telegram.constants import ReactionEmoji
 from telegram.ext import (
     Application,
@@ -15,7 +16,15 @@ from telegram.ext import (
 )
 from telegram.ext._utils.types import HandlerCallback
 
-from .utils import _setup_agentfs, handle_documents, handle_prompt, start
+from .utils import (
+    _escape_markdow_for_tg,
+    _remove_temporary_report_file,
+    _setup_agentfs,
+    _write_temporary_report_file,
+    handle_documents,
+    handle_prompt,
+    start,
+)
 
 
 async def start_tg(update: Update, context: CallbackContext) -> None:
@@ -38,8 +47,15 @@ async def handle_documents_tg(update: Update, context: CallbackContext) -> None:
 async def handle_prompt_tg(update: Update, context: CallbackContext) -> None:
     if update.message and update.message.text:
         await update.message.set_reaction(reaction=ReactionEmoji.EYES)
-        report = await handle_prompt(update.message.text)
-        await update.message.reply_markdown_v2(text=report)
+        report, final_response = await handle_prompt(update.message.text)
+        final_response = _escape_markdow_for_tg(final_response)
+        report_path = await _write_temporary_report_file(report)
+        await update.message.reply_markdown_v2(text=final_response)
+        await update.message.reply_document(
+            document=Path(report_path),
+            caption="Here is the activity report for the last session",
+        )
+        await _remove_temporary_report_file(report_path)
     else:
         raise ValueError("No message provided")
 
@@ -67,7 +83,24 @@ async def run_bot() -> None:
         )
         application.add_handler(MessageHandler(filters.TEXT, handle_prompt_tg))
         application.add_error_handler(cast(HandlerCallback, error_handler))
-        application.run_polling(1.0)
+        if application.updater is not None:
+            await application.initialize()
+            await application.updater.start_polling()
+            await application.start()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                logging.info("Received shutdown signal")
+                return
+            except Exception as e:
+                logging.error(f"An error occurred: {e}")
+                return
+            finally:
+                await application.updater.stop()
+                await application.stop()
+                await application.shutdown()
+        else:
+            raise TypeError("application.updater cannot be None")
 
 
 def main() -> None:

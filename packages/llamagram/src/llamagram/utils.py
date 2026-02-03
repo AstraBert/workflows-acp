@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 from typing import cast
 
+import aiofiles
+from mcp_use.client.task_managers.base import asyncio
 from random_name import generate_name
 from telegram import Document, File, User
 from telegram.ext import CallbackContext
@@ -21,7 +23,13 @@ from workflows_acp.llm_wrapper import LLMWrapper
 from workflows_acp.tools.agentfs import configure_agentfs, load_all_files
 from workflows_acp.workflow import AgentWorkflow
 
-from .constants import AGENT_TASK, DATA_DIR, DEFAULT_TO_AVOID, DEFAULT_TO_AVOID_FILES
+from .constants import (
+    AGENT_TASK,
+    DATA_DIR,
+    DEFAULT_TO_AVOID,
+    DEFAULT_TO_AVOID_FILES,
+    SPECIAL_CHARS,
+)
 from .tools import TOOLS
 
 logging.basicConfig(
@@ -92,21 +100,33 @@ WORKFLOW = AgentWorkflow(llm=LLM, mcp_client=None, timeout=600)
 
 def _event_to_log(event: Event) -> str | None:
     if isinstance(event, ThinkingEvent):
-        return f"**Thought**: {event.content}"
+        message = f"**Thought**: {event.content}"
+        logging.info(message)
+        return message
     elif isinstance(event, PromptEvent):
-        return f"**Observation**: {event.content}"
+        message = f"**Observation**: {event.prompt}"
+        logging.info(message)
+        return message
     elif isinstance(event, ToolCallEvent):
-        return f"Calling tool **{event.tool_name}** with input:\n\n```json\n{json.dumps(event.tool_input, indent=2)}\n```"
+        message = f"Calling tool **{event.tool_name}** with input:\n\n```json\n{json.dumps(event.tool_input, indent=2)}\n```"
+        logging.info(message)
+        return message
     elif isinstance(event, ToolResultEvent):
-        return f"Result for tool **{event.tool_name}**: {event.result}"
+        message = f"Result for tool **{event.tool_name}**: {event.result}"
+        logging.info(message)
+        return message
     elif isinstance(event, OutputEvent):
         if event.final_output is not None:
-            return f"**Final response**: {event.final_output}"
-        return f"**Error**: {event.error}"
+            message = f"**Final response**: {event.final_output}"
+            logging.info(message)
+            return message
+        message = f"**Error**: {event.error}"
+        logging.error(message)
+        return message
     return None
 
 
-async def handle_prompt(text: str) -> str:
+async def handle_prompt(text: str) -> tuple[str, str]:
     input_event = InputEvent(prompt=text, mode="bypass")
     handler = WORKFLOW.run(start_event=input_event)
     report = ""
@@ -118,7 +138,21 @@ async def handle_prompt(text: str) -> str:
     log = _event_to_log(result)
     if log is not None:
         report += log + "\n"
-    return report
+    return report, log or "No final response"
+
+
+async def _write_temporary_report_file(content: str) -> str:
+    path = "session-" + generate_name() + "-report.md"
+    async with aiofiles.open(path, "w") as f:
+        await f.write(content)
+    return path
+
+
+async def _remove_temporary_report_file(path: str) -> None:
+    try:
+        await asyncio.to_thread(os.remove, path)
+    except Exception:
+        pass
 
 
 async def _setup_agentfs() -> None:
@@ -132,3 +166,9 @@ async def _setup_agentfs() -> None:
         logging.info(
             f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files."
         )
+
+
+def _escape_markdow_for_tg(markdown: str) -> str:
+    for char in SPECIAL_CHARS:
+        markdown = markdown.replace(char, f"\\{char}")
+    return markdown
