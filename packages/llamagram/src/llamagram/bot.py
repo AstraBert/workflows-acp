@@ -19,8 +19,8 @@ from .utils import _setup_agentfs, handle_documents, handle_prompt, start
 
 
 async def start_tg(update: Update, context: CallbackContext) -> None:
-    val = start()
     if update.message:
+        val = start(update.message.from_user)
         await update.message.reply_text(val)
     else:
         raise ValueError("No message provided")

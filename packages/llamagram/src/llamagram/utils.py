@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import cast
 
 from random_name import generate_name
-from telegram import Document, File
+from telegram import Document, File, User
 from telegram.ext import CallbackContext
 from workflows.events import Event
 from workflows_acp.constants import AGENTFS_FILE
@@ -29,8 +29,21 @@ logging.basicConfig(
 )
 
 
-def start() -> str:
-    return "Hey there! I am LlamaGram, your virtual assistant for summarizing and extracting knowledge from research papers - you simply need to upload them to this chat and let the magic happen!"
+def start(user: User | None) -> str:
+    greetings = "Hello there, Llama Enthusiast!"
+    if user is not None and user.username is not None:
+        username = user.username
+        if not username.startswith("@"):
+            username = "@" + username
+        greetings = f"Hello there, {username}!"
+
+    return f"""
+{greetings}
+I am LlamaGram, your personal assistant for whatever concerns documents.
+I can navigate the filesystem from the directory where you deployed me, and perform operations based on your text messages.
+You can also upload PDF documents from this chat, that I will download and will be able to use afterwards.
+With this being said, please, ask any questions you like!
+    """
 
 
 def _get_file_name(document: Document) -> str:

@@ -4,7 +4,7 @@ all: test lint format typecheck
 
 test:
 	$(info ****************** running tests ******************)
-	uv run pytest tests/
+	uv run --package workflows-acp -- pytest tests/
 
 lint-check:
 	$(info ****************** linting ******************)
