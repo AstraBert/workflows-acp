@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import os
@@ -5,12 +6,13 @@ from pathlib import Path
 from typing import cast
 
 import aiofiles
+from dotenv import load_dotenv
 from mcp_use.client.task_managers.base import asyncio
 from random_name import generate_name
 from telegram import Document, File, User
 from telegram.ext import CallbackContext
 from workflows.events import Event
-from workflows_acp.constants import AGENTFS_FILE
+from workflows_acp.constants import AGENTFS_FILE, AVAILABLE_MODELS, DEFAULT_MODEL
 from workflows_acp.events import (
     InputEvent,
     OutputEvent,
@@ -32,10 +34,6 @@ from .constants import (
 )
 from .tools import TOOLS
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
-
 
 def start(user: User | None) -> str:
     greetings = "Hello there, Llama Enthusiast!"
@@ -52,6 +50,38 @@ I can navigate the filesystem from the directory where you deployed me, and perf
 You can also upload PDF documents from this chat, that I will download and will be able to use afterwards.
 With this being said, please, ask any questions you like!
     """
+
+
+@functools.lru_cache(maxsize=1)
+def get_llm() -> LLMWrapper:
+    load_dotenv()
+    llm_provider = os.getenv("LLAMAGRAM_LLM_PROVIDER", "openai")
+    if llm_provider not in ("openai", "google", "anthropic"):
+        raise ValueError(f"Unsupported model provider: {llm_provider}")
+    model = os.getenv("LLAMAGRAM_LLM_MODEL", DEFAULT_MODEL[llm_provider])
+    if AVAILABLE_MODELS.get(model) != llm_provider:
+        raise ValueError(f"Unsupported model for provider {llm_provider}: {model}")
+    api_key = os.getenv("LLAMAGRAM_LLM_API_KEY") or os.getenv(
+        f"{llm_provider.upper()}_API_KEY"
+    )
+    if api_key is not None:
+        redacted_api_key = api_key[:3] + "x" * (len(api_key) - 6) + api_key[-3:]
+        logging.info(
+            f"Starting the bot with {llm_provider.capitalize()} as LLM provider, {model} as LLM model and {redacted_api_key} as API key"
+        )
+    return LLMWrapper(
+        tools=TOOLS,
+        api_key=api_key,
+        model=model,
+        llm_provider=llm_provider,
+        agent_task=AGENT_TASK,
+    )
+
+
+@functools.lru_cache(maxsize=1)
+def get_workflow() -> AgentWorkflow:
+    llm = get_llm()
+    return AgentWorkflow(llm=llm, mcp_client=None, timeout=600)
 
 
 def _get_file_name(document: Document) -> str:
@@ -75,8 +105,6 @@ async def _download_file_to_agentfs(file_path: str, content: bytes) -> str:
 
 async def handle_documents(document: Document, context: CallbackContext) -> str:
     name = _get_file_name(document=document)
-    if not DATA_DIR.is_dir():
-        os.makedirs(DATA_DIR, exist_ok=True)
     path = os.path.join(DATA_DIR, name)
     try:
         fl = cast(File, await context.bot.get_file(document.file_id))
@@ -86,16 +114,6 @@ async def handle_documents(document: Document, context: CallbackContext) -> str:
         logging.error(str(e))
         return "There was an error while downloading your file, please try re-uploading"
     return f"Your file has been successfully downloaded at: {path}. Use this path to reference the file in your follow-up requests to the agent"
-
-
-LLM = LLMWrapper(
-    tools=TOOLS,
-    api_key=os.getenv("OPENAI_API_KEY"),
-    model="gpt-4.1",
-    llm_provider="openai",
-    agent_task=AGENT_TASK,
-)
-WORKFLOW = AgentWorkflow(llm=LLM, mcp_client=None, timeout=600)
 
 
 def _event_to_log(event: Event) -> str | None:
@@ -127,8 +145,9 @@ def _event_to_log(event: Event) -> str | None:
 
 
 async def handle_prompt(text: str) -> tuple[str, str]:
+    workflow = get_workflow()
     input_event = InputEvent(prompt=text, mode="bypass")
-    handler = WORKFLOW.run(start_event=input_event)
+    handler = workflow.run(start_event=input_event)
     report = ""
     async for event in handler.stream_events():
         log = _event_to_log(event)

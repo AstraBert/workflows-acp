@@ -1,9 +1,11 @@
+import functools
 import json
 import mimetypes
 import os
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
+from dotenv import load_dotenv
 from llama_cloud import AsyncLlamaCloud
 from llama_cloud.types.classifier.classifier_rule_param import ClassifierRuleParam
 from llama_cloud.types.extraction import ExtractConfigParam
@@ -11,7 +13,11 @@ from workflows_acp.models import Tool
 from workflows_acp.tools.agentfs import _is_accessible_path, configure_agentfs
 from workflows_acp.tools.definitions import AGENTFS_TOOLS
 
-LLAMA_CLOUD_CLIENT = AsyncLlamaCloud(api_key=os.getenv("LLAMA_CLOUD_API_KEY"))
+
+@functools.lru_cache(maxsize=1)
+def get_client() -> AsyncLlamaCloud:
+    load_dotenv()
+    return AsyncLlamaCloud(api_key=os.getenv("LLAMA_CLOUD_API_KEY"))
 
 
 async def _read_file_from_agentfs(file_path: str) -> bytes:
@@ -42,7 +48,8 @@ async def _upload_file(
         file_content,
         data_type,
     )
-    file_obj = await LLAMA_CLOUD_CLIENT.files.create(
+    client = get_client()
+    file_obj = await client.files.create(
         file=file_to_upload,
         purpose=purpose,
     )
@@ -54,7 +61,8 @@ async def parse_file_content(file_path: str) -> str:
         file_id = await _upload_file(file_path, "parse")
     except FileNotFoundError:
         return f"No such file: {file_path}"
-    result = await LLAMA_CLOUD_CLIENT.parsing.parse(
+    client = get_client()
+    result = await client.parsing.parse(
         tier="fast", version="latest", file_id=file_id, expand=["text"]
     )
     if result.job.status in ("FAILED", "CANCELLED") or result.text is None:
@@ -73,7 +81,8 @@ async def extract_structured_data_from_file(
         file_id = await _upload_file(file_path, "extract")
     except FileNotFoundError:
         return f"No such file: {file_path}"
-    result = await LLAMA_CLOUD_CLIENT.extraction.extract(
+    client = get_client()
+    result = await client.extraction.extract(
         data_schema=json_schema,
         file_id=file_id,
         config=ExtractConfigParam(extraction_mode="FAST"),
@@ -101,7 +110,8 @@ async def classify_file(
         file_id = await _upload_file(file_path, "classify")
     except FileNotFoundError:
         return f"No such file: {file_path}"
-    result = await LLAMA_CLOUD_CLIENT.classifier.classify(
+    client = get_client()
+    result = await client.classifier.classify(
         file_ids=[file_id],
         rules=classify_rules,
     )

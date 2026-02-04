@@ -834,6 +834,7 @@ source = { editable = "packages/llamagram" }
 dependencies = [
     { name = "aiofiles" },
     { name = "llama-cloud" },
+    { name = "python-dotenv" },
     { name = "python-telegram-bot" },
     { name = "random-name" },
     { name = "workflows-acp" },
@@ -843,6 +844,7 @@ dependencies = [
 requires-dist = [
     { name = "aiofiles", specifier = ">=25.1.0" },
     { name = "llama-cloud", specifier = ">=1.2.0" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "python-telegram-bot", specifier = ">=22.6" },
     { name = "random-name", specifier = ">=0.1.1" },
     { name = "workflows-acp", editable = "." },

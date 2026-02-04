@@ -1,4 +1,6 @@
+import logging
 from pathlib import Path
+from typing import Literal
 
 DEFAULT_TO_AVOID = [
     ".git",
@@ -57,3 +59,13 @@ SPECIAL_CHARS = [
     ".",
     "!",
 ]
+STR_TO_LOG_LEVEL = {
+    "info": logging.INFO,
+    "debug": logging.DEBUG,
+    "error": logging.ERROR,
+    "warning": logging.WARNING,
+    "warn": logging.WARN,
+    "critical": logging.CRITICAL,
+    "fatal": logging.FATAL,
+}
+LOG_LEVELS = Literal["info", "debug", "error", "warning", "warn", "critical", "fatal"]
