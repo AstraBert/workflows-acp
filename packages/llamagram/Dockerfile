@@ -16,7 +16,7 @@ USER user
 ENV PATH=/home/user/.local/bin:$PATH
 WORKDIR /home/user/workspace
 
-# Install your tool
+# Install llamagram
 RUN uv tool install llamagram --prerelease=allow
 
 CMD [ "llamagram", "run" ]
