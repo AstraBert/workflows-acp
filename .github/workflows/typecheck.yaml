@@ -20,7 +20,7 @@ jobs:
       - name: Run ty
         run: make typecheck
 
-  core-typecheck-llamagram:
+  core-typecheck-lobsterx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,4 +35,4 @@ jobs:
 
       - name: Run ty
         run: make typecheck
-        working-directory: packages/llamagram
+        working-directory: packages/lobsterx

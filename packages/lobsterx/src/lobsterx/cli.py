@@ -71,12 +71,12 @@ def setup_wizard(
 ) -> None:
     if interactive:
         llm_provider = Prompt().ask(
-            "LLM Provider for LlamaGram",
+            "LLM Provider for LobsterX",
             choices=["openai", "google", "anthropic"],
             show_choices=True,
         )  # type: ignore
         llm_model = Prompt().ask(
-            "LLM Model for LlamaGram",
+            "LLM Model for LobsterX",
             choices=[
                 m
                 for m in list(AVAILABLE_MODELS.keys())
@@ -102,8 +102,8 @@ def setup_wizard(
     dot_env = Path(".env")
     if not dot_env.exists():
         dot_env.touch()
-    set_key(".env", key_to_set="LLAMAGRAM_LLM_PROVIDER", value_to_set=llm_provider)
-    set_key(".env", key_to_set="LLAMAGRAM_LLM_MODEL", value_to_set=llm_model)
-    set_key(".env", key_to_set="LLAMAGRAM_LLM_API_KEY", value_to_set=api_key)
+    set_key(".env", key_to_set="LOBSTERX_LLM_PROVIDER", value_to_set=llm_provider)
+    set_key(".env", key_to_set="LOBSTERX_LLM_MODEL", value_to_set=llm_model)
+    set_key(".env", key_to_set="LOBSTERX_LLM_API_KEY", value_to_set=api_key)
     set_key(".env", key_to_set="LLAMA_CLOUD_API_KEY", value_to_set=llama_cloud_api_key)
     set_key(".env", key_to_set="TELEGRAM_BOT_TOKEN", value_to_set=telegram_token)

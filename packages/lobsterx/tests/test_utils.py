@@ -4,21 +4,14 @@ from typing import cast
 from unittest.mock import Mock, patch
 
 import pytest
-from telegram import Document, User
-from telegram.ext import CallbackContext
-from workflows_acp.llm_wrapper import LLMWrapper
-from workflows_acp.llms.openai_llm import OpenAILLM
-from workflows_acp.tools.agentfs import load_all_files
-from workflows_acp.workflow import AgentWorkflow
-
-from llamagram.constants import (
+from lobsterx.constants import (
     DATA_DIR,
     DEFAULT_TO_AVOID,
     DEFAULT_TO_AVOID_FILES,
     SPECIAL_CHARS,
 )
-from llamagram.tools.llamacloud import _read_file_from_agentfs
-from llamagram.utils import (
+from lobsterx.tools.llamacloud import _read_file_from_agentfs
+from lobsterx.utils import (
     _escape_markdow_for_tg,
     _event_to_log,
     _remove_temporary_report_file,
@@ -30,6 +23,12 @@ from llamagram.utils import (
     handle_prompt,
     start,
 )
+from telegram import Document, User
+from telegram.ext import CallbackContext
+from workflows_acp.llm_wrapper import LLMWrapper
+from workflows_acp.llms.openai_llm import OpenAILLM
+from workflows_acp.tools.agentfs import load_all_files
+from workflows_acp.workflow import AgentWorkflow
 
 from .conftest import (
     AgentWorkflowMock,
@@ -47,7 +46,7 @@ def test_start() -> None:
         message
         == """
 Hello there, @hello!
-I am LlamaGram, your personal assistant for whatever concerns documents.
+I am LobsterX, your personal assistant for whatever concerns documents.
 I can navigate the filesystem from the directory where you deployed me, and perform operations based on your text messages.
 You can also upload PDF documents from this chat, that I will download and will be able to use afterwards.
 With this being said, please, ask any questions you like!
@@ -58,8 +57,8 @@ With this being said, please, ask any questions you like!
     assert (
         message
         == """
-Hello there, Llama Enthusiast!
-I am LlamaGram, your personal assistant for whatever concerns documents.
+Hello there, Lobster Enthusiast!
+I am LobsterX, your personal assistant for whatever concerns documents.
 I can navigate the filesystem from the directory where you deployed me, and perform operations based on your text messages.
 You can also upload PDF documents from this chat, that I will download and will be able to use afterwards.
 With this being said, please, ask any questions you like!
@@ -117,9 +116,9 @@ async def test_handle_documents_fail(
 @pytest.mark.asyncio
 async def test_get_llm(monkeypatch: pytest.MonkeyPatch) -> None:
     get_llm.cache_clear()
-    monkeypatch.setenv("LLAMAGRAM_LLM_PROVIDER", "openai")
-    monkeypatch.setenv("LLAMAGRAM_LLM_MODEL", "gpt-5")
-    monkeypatch.setenv("LLAMAGRAM_LLM_API_KEY", "secret-key")
+    monkeypatch.setenv("LOBSTERX_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LOBSTERX_LLM_MODEL", "gpt-5")
+    monkeypatch.setenv("LOBSTERX_LLM_API_KEY", "secret-key")
     llm = get_llm()
     assert llm.model == "gpt-5"
     assert isinstance(llm._client, OpenAILLM)
@@ -129,8 +128,8 @@ async def test_get_llm(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_get_llm_nondefault_key(monkeypatch: pytest.MonkeyPatch) -> None:
     get_llm.cache_clear()
-    monkeypatch.setenv("LLAMAGRAM_LLM_PROVIDER", "openai")
-    monkeypatch.setenv("LLAMAGRAM_LLM_MODEL", "gpt-5")
+    monkeypatch.setenv("LOBSTERX_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LOBSTERX_LLM_MODEL", "gpt-5")
     monkeypatch.setenv("OPENAI_API_KEY", "secret-key")
     llm = get_llm()
     assert llm.model == "gpt-5"
@@ -141,7 +140,7 @@ async def test_get_llm_nondefault_key(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_get_llm_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     get_llm.cache_clear()
-    monkeypatch.setenv("LLAMAGRAM_LLM_API_KEY", "secret-key")
+    monkeypatch.setenv("LOBSTERX_LLM_API_KEY", "secret-key")
     llm = get_llm()
     assert llm.model == "gpt-4.1"
     assert isinstance(llm._client, OpenAILLM)
@@ -151,8 +150,8 @@ async def test_get_llm_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_get_llm_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     get_llm.cache_clear()
-    monkeypatch.setenv("LLAMAGRAM_LLM_PROVIDER", "openai")
-    monkeypatch.setenv("LLAMAGRAM_LLM_MODEL", "gpt-5")
+    monkeypatch.setenv("LOBSTERX_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LOBSTERX_LLM_MODEL", "gpt-5")
     monkeypatch.setenv("GOOGLE_API_KEY", "secret-key")
     with pytest.raises(
         ValueError,
@@ -160,15 +159,15 @@ async def test_get_llm_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     ):
         get_llm()
     get_llm.cache_clear()
-    monkeypatch.setenv("LLAMAGRAM_LLM_PROVIDER", "opena")
+    monkeypatch.setenv("LOBSTERX_LLM_PROVIDER", "opena")
     with pytest.raises(
         ValueError,
         match="Unsupported model provider: opena",
     ):
         get_llm()
     get_llm.cache_clear()
-    monkeypatch.setenv("LLAMAGRAM_LLM_PROVIDER", "openai")
-    monkeypatch.setenv("LLAMAGRAM_LLM_MODEL", "gpt-6")
+    monkeypatch.setenv("LOBSTERX_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LOBSTERX_LLM_MODEL", "gpt-6")
     with pytest.raises(
         ValueError,
         match="Unsupported model for provider openai: gpt-6",
@@ -177,9 +176,9 @@ async def test_get_llm_errors(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_get_workflow(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("LLAMAGRAM_LLM_PROVIDER", "openai")
-    monkeypatch.setenv("LLAMAGRAM_LLM_MODEL", "gpt-5")
-    monkeypatch.setenv("LLAMAGRAM_LLM_API_KEY", "secret-key")
+    monkeypatch.setenv("LOBSTERX_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LOBSTERX_LLM_MODEL", "gpt-5")
+    monkeypatch.setenv("LOBSTERX_LLM_API_KEY", "secret-key")
     get_llm.cache_clear()
     get_workflow.cache_clear()
     workflow = get_workflow()
@@ -193,7 +192,7 @@ def test_get_workflow(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_handle_prompt(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
-    with patch("llamagram.utils.get_workflow", new_callable=Mock) as mock_get_workflow:
+    with patch("lobsterx.utils.get_workflow", new_callable=Mock) as mock_get_workflow:
         mock_get_workflow.return_value = AgentWorkflowMock()
         report, final_answer = await handle_prompt("Hello")
         # check that the mock workflow actually ran

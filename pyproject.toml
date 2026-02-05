@@ -29,7 +29,7 @@ module-name = "workflows_acp"
 
 [tool.uv.workspace]
 members = [
-    "packages/llamagram",
+    "packages/lobsterx",
 ]
 
 [dependency-groups]

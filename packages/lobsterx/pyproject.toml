@@ -3,7 +3,7 @@ requires = ["uv_build>=0.9.10,<0.10.0"]
 build-backend = "uv_build"
 
 [project]
-name = "llamagram"
+name = "lobsterx"
 version = "0.1.0-beta"
 description = "Background AI assistant working as a Telegram bot, built specifically for document-related use cases"
 readme = "README.md"
@@ -31,4 +31,4 @@ dev = [
 ]
 
 [project.scripts]
-llamagram = "llamagram.cli:app"
+lobsterx = "lobsterx.cli:app"

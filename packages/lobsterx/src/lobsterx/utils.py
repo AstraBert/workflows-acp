@@ -36,7 +36,7 @@ from .tools.llamacloud import _download_file_to_agentfs
 
 
 def start(user: User | None) -> str:
-    greetings = "Hello there, Llama Enthusiast!"
+    greetings = "Hello there, Lobster Enthusiast!"
     if user is not None and user.username is not None:
         username = user.username
         if not username.startswith("@"):
@@ -45,7 +45,7 @@ def start(user: User | None) -> str:
 
     return f"""
 {greetings}
-I am LlamaGram, your personal assistant for whatever concerns documents.
+I am LobsterX, your personal assistant for whatever concerns documents.
 I can navigate the filesystem from the directory where you deployed me, and perform operations based on your text messages.
 You can also upload PDF documents from this chat, that I will download and will be able to use afterwards.
 With this being said, please, ask any questions you like!
@@ -55,13 +55,13 @@ With this being said, please, ask any questions you like!
 @functools.lru_cache(maxsize=1)
 def get_llm() -> LLMWrapper:
     load_dotenv()
-    llm_provider = os.getenv("LLAMAGRAM_LLM_PROVIDER", "openai")
+    llm_provider = os.getenv("LOBSTERX_LLM_PROVIDER", "openai")
     if llm_provider not in ("openai", "google", "anthropic"):
         raise ValueError(f"Unsupported model provider: {llm_provider}")
-    model = os.getenv("LLAMAGRAM_LLM_MODEL", DEFAULT_MODEL[llm_provider])
+    model = os.getenv("LOBSTERX_LLM_MODEL", DEFAULT_MODEL[llm_provider])
     if AVAILABLE_MODELS.get(model) != llm_provider:
         raise ValueError(f"Unsupported model for provider {llm_provider}: {model}")
-    api_key = os.getenv("LLAMAGRAM_LLM_API_KEY") or os.getenv(
+    api_key = os.getenv("LOBSTERX_LLM_API_KEY") or os.getenv(
         f"{llm_provider.upper()}_API_KEY"
     )
     if api_key is not None:
