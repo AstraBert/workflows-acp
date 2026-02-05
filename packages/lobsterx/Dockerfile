@@ -16,7 +16,7 @@ USER user
 ENV PATH=/home/user/.local/bin:$PATH
 WORKDIR /home/user/workspace
 
-# Install llamagram
+# Install lobsterx
 RUN uv tool install lobsterx --prerelease=allow
 
 CMD [ "lobsterx", "run" ]

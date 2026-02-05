@@ -1,4 +1,4 @@
-# Contributing to `workflows-acp` and `llamagram`
+# Contributing to `workflows-acp` and `lobsterx`
 
 Thank you for your interest in contributing to this project! Please review these guidelines before getting started.
 

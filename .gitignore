@@ -14,7 +14,7 @@ wheels/
 
 # caches
 *_cache/
-.llamagram/
+.lobsterx/
 # memory jsonl file
 .agent_memory.jsonl
 
