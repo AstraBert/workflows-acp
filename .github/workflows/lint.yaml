@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: make lint-check
 
-  lint-llamagram:
+  lint-lobsterx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,9 +37,9 @@ jobs:
       - name: Run formatter
         shell: bash
         run: make format-check
-        working-directory: packages/llamagram
+        working-directory: packages/lobsterx
 
       - name: Run linter
         shell: bash
         run: make lint-check
-        working-directory: packages/llamagram
+        working-directory: packages/lobsterx

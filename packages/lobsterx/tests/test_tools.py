@@ -3,16 +3,15 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from workflows_acp.tools.agentfs import load_all_files
-
-from llamagram.constants import DEFAULT_TO_AVOID, DEFAULT_TO_AVOID_FILES
-from llamagram.tools.llamacloud import (
+from lobsterx.constants import DEFAULT_TO_AVOID, DEFAULT_TO_AVOID_FILES
+from lobsterx.tools.llamacloud import (
     _download_file_to_agentfs,
     _read_file_from_agentfs,
     classify_file,
     extract_structured_data_from_file,
     parse_file_content,
 )
+from workflows_acp.tools.agentfs import load_all_files
 
 from .conftest import CacheMock, LlamaCloudMock
 
@@ -71,10 +70,10 @@ async def test_parse_file_content_success(
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     with patch(
-        "llamagram.tools.llamacloud.get_client", new_callable=Mock
+        "lobsterx.tools.llamacloud.get_client", new_callable=Mock
     ) as mock_get_client:
         with patch(
-            "llamagram.tools.llamacloud.get_cache", new_callable=Mock
+            "lobsterx.tools.llamacloud.get_cache", new_callable=Mock
         ) as mock_get_cache:
             mock_llama_cloud = LlamaCloudMock()
             mock_get_client.return_value = mock_llama_cloud
@@ -94,10 +93,10 @@ async def test_parse_file_content_fail(
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     with patch(
-        "llamagram.tools.llamacloud.get_client", new_callable=Mock
+        "lobsterx.tools.llamacloud.get_client", new_callable=Mock
     ) as mock_get_client:
         with patch(
-            "llamagram.tools.llamacloud.get_cache", new_callable=Mock
+            "lobsterx.tools.llamacloud.get_cache", new_callable=Mock
         ) as mock_get_cache:
             mock_llama_cloud = LlamaCloudMock(should_fail=True)
             mock_get_client.return_value = mock_llama_cloud
@@ -118,7 +117,7 @@ async def test_extract_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     with patch(
-        "llamagram.tools.llamacloud.get_client", new_callable=Mock
+        "lobsterx.tools.llamacloud.get_client", new_callable=Mock
     ) as mock_get_client:
         mock_llama_cloud = LlamaCloudMock()
         mock_get_client.return_value = mock_llama_cloud
@@ -135,7 +134,7 @@ async def test_extract_fail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     with patch(
-        "llamagram.tools.llamacloud.get_client", new_callable=Mock
+        "lobsterx.tools.llamacloud.get_client", new_callable=Mock
     ) as mock_get_client:
         mock_llama_cloud = LlamaCloudMock(should_fail=True)
         mock_get_client.return_value = mock_llama_cloud
@@ -154,7 +153,7 @@ async def test_classify_success(
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     with patch(
-        "llamagram.tools.llamacloud.get_client", new_callable=Mock
+        "lobsterx.tools.llamacloud.get_client", new_callable=Mock
     ) as mock_get_client:
         mock_llama_cloud = LlamaCloudMock()
         mock_get_client.return_value = mock_llama_cloud
@@ -174,7 +173,7 @@ async def test_classify_fail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     with patch(
-        "llamagram.tools.llamacloud.get_client", new_callable=Mock
+        "lobsterx.tools.llamacloud.get_client", new_callable=Mock
     ) as mock_get_client:
         mock_llama_cloud = LlamaCloudMock(should_fail=True)
         mock_get_client.return_value = mock_llama_cloud

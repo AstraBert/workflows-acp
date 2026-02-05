@@ -320,11 +320,11 @@ def main() -> None:
     )
 ```
 
-## LlamaGram
+## LobsterX
 
-[LlamaGram](./packages/llamagram) is the [OpenClaw](https://openclaw.ai)-like AI agent (working as a Telegram bot) for document processing based on the `workflows-acp` harness and on [LlamaCloud](https://cloud.llamaindex.ai).
+[LobsterX](./packages/lobsterx) is the [OpenClaw](https://openclaw.ai)-like AI agent (working as a Telegram bot) for document processing based on the `workflows-acp` harness and on [LlamaCloud](https://cloud.llamaindex.ai).
 
-Find more in the [dedicated README](./packages/llamagram/README.md)
+Find more in the [dedicated README](./packages/lobsterx/README.md)
 
 ## License
 

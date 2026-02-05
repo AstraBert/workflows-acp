@@ -1,9 +1,9 @@
-name: GitHub Release LlamaGram
+name: GitHub Release LobsterX
 
 on:
   push:
     tags:
-      - "llamagram@v[0-9].[0-9]+.[0-9]+*"
+      - "lobsterx@v[0-9].[0-9]+.[0-9]+*"
 
 jobs:
   release-mcp:
@@ -20,14 +20,14 @@ jobs:
 
       - name: Build
         run: uv build -o dist
-        working-directory: packages/llamagram
+        working-directory: packages/lobsterx
 
       - name: Publish to PyPI
         run: uv publish --token ${{ secrets.PYPI_TOKEN }}
-        working-directory: packages/llamagram
+        working-directory: packages/lobsterx
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "packages/llamagram/dist/*"
+          artifacts: "packages/lobsterx/dist/*"
           generateReleaseNotes: true

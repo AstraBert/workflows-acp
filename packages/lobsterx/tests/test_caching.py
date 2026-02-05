@@ -2,15 +2,14 @@ import asyncio
 from pathlib import Path
 
 import pytest
-
-from llamagram.tools.caching import FileContentCache
+from lobsterx.tools.caching import FileContentCache
 
 
 def test_cache_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     cache = FileContentCache()
     assert cache._ttl == 60 * 60 * 24
-    assert (tmp_path / ".llamagram" / "cache").is_dir()
+    assert (tmp_path / ".lobsterx" / "cache").is_dir()
 
 
 @pytest.mark.asyncio

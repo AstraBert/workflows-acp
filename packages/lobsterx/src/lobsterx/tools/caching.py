@@ -8,7 +8,7 @@ from diskcache import Cache as DiskCache
 
 class FileContentCache:
     def __init__(self) -> None:
-        self._cache = DiskCache(directory=".llamagram/cache")
+        self._cache = DiskCache(directory=".lobsterx/cache")
         self._ttl: float = 60 * 60 * 24  # one day
 
     async def set(

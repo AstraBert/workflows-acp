@@ -2,9 +2,8 @@ from pathlib import Path
 
 import pytest
 from dotenv import dotenv_values
+from lobsterx.cli import app
 from typer.testing import CliRunner
-
-from llamagram.cli import app
 
 runner = CliRunner()
 
@@ -27,9 +26,9 @@ def test_setup_command_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     assert (tmp_path / ".env").is_file()
     assert result.exit_code == 0
     data = dotenv_values(dotenv_path=str((tmp_path / ".env")))
-    assert data["LLAMAGRAM_LLM_MODEL"] == "gpt-4.1"
-    assert data["LLAMAGRAM_LLM_PROVIDER"] == "openai"
-    assert data["LLAMAGRAM_LLM_API_KEY"] == "secret-key"
+    assert data["LOBSTERX_LLM_MODEL"] == "gpt-4.1"
+    assert data["LOBSTERX_LLM_PROVIDER"] == "openai"
+    assert data["LOBSTERX_LLM_API_KEY"] == "secret-key"
     assert data["LLAMA_CLOUD_API_KEY"] == "llama-cloud-key"
     assert data["TELEGRAM_BOT_TOKEN"] == "tok"
 
@@ -56,8 +55,8 @@ def test_setup_command_custom(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert (tmp_path / ".env").is_file()
     assert result.exit_code == 0
     data = dotenv_values(dotenv_path=str((tmp_path / ".env")))
-    assert data["LLAMAGRAM_LLM_MODEL"] == "gemini-3-flash-preview"
-    assert data["LLAMAGRAM_LLM_PROVIDER"] == "google"
-    assert data["LLAMAGRAM_LLM_API_KEY"] == "secret-key"
+    assert data["LOBSTERX_LLM_MODEL"] == "gemini-3-flash-preview"
+    assert data["LOBSTERX_LLM_PROVIDER"] == "google"
+    assert data["LOBSTERX_LLM_API_KEY"] == "secret-key"
     assert data["LLAMA_CLOUD_API_KEY"] == "llama-cloud-key"
     assert data["TELEGRAM_BOT_TOKEN"] == "tok"

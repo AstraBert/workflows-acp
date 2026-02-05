@@ -26,7 +26,7 @@ format-check:
 
 typecheck:
 	$(info ****************** type checking ******************)
-	uv run ty check src/llamagram/
+	uv run ty check src/lobsterx/
 
 build:
 	$(info ****************** building ******************)

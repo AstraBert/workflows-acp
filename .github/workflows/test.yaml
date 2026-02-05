@@ -23,7 +23,7 @@ jobs:
       - name: Run Tests on Main Package
         run: make test
 
-  testing_pr_llamagram:
+  testing_pr_lobsterx:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -41,4 +41,4 @@ jobs:
 
       - name: Run Tests on Main Package
         run: make test
-        working-directory: packages/llamagram
+        working-directory: packages/lobsterx
