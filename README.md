@@ -320,3 +320,16 @@ def main() -> None:
     )
 ```
 
+## LlamaGram
+
+[LlamaGram](./packages/llamagram) is the [OpenClaw](https://openclaw.ai)-like AI agent (working as a Telegram bot) for document processing based on the `workflows-acp` harness and on [LlamaCloud](https://cloud.llamaindex.ai).
+
+Find more in the [dedicated README](./packages/llamagram/README.md)
+
+## License
+
+This package is provided under [MIT License](./LICENSE)
+
+## Contributing
+
+For contributions, refer to the [contributing guide](./CONTRIBUTING.md)
