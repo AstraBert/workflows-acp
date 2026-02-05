@@ -13,6 +13,8 @@ from workflows_acp.models import Tool
 from workflows_acp.tools.agentfs import _is_accessible_path, configure_agentfs
 from workflows_acp.tools.definitions import AGENTFS_TOOLS
 
+from .caching import get_cache
+
 
 @functools.lru_cache(maxsize=1)
 def get_client() -> AsyncLlamaCloud:
@@ -37,6 +39,16 @@ async def _read_file_from_agentfs(file_path: str) -> bytes:
     return content if isinstance(content, bytes) else content.encode("utf-8")
 
 
+async def _download_file_to_agentfs(file_path: str, content: bytes) -> str:
+    file_path = str(Path(file_path).resolve())
+    agentfs = await configure_agentfs()
+    try:
+        await agentfs.fs.write_file(file_path, content=content, encoding="utf-8")
+    except Exception as e:
+        return f"There was an error while writing the file: {e}"
+    return "File written with success"
+
+
 async def _upload_file(
     file_path: str,
     purpose: Literal["parse", "classify", "extract", "sheet", "split", "agent_app"],
@@ -57,6 +69,10 @@ async def _upload_file(
 
 
 async def parse_file_content(file_path: str) -> str:
+    cache = get_cache()
+    cached = await cache.get(file_path)
+    if cached is not None:
+        return cached
     try:
         file_id = await _upload_file(file_path, "parse")
     except FileNotFoundError:
@@ -67,7 +83,9 @@ async def parse_file_content(file_path: str) -> str:
     )
     if result.job.status in ("FAILED", "CANCELLED") or result.text is None:
         return f"It was not possible to parse the content of {file_path}: {result.job.error_message}"
-    return "\n\n".join([page.text for page in result.text.pages])
+    content = "\n\n".join([page.text for page in result.text.pages])
+    await cache.set(file_path, content)
+    return content
 
 
 async def extract_structured_data_from_file(
@@ -89,7 +107,7 @@ async def extract_structured_data_from_file(
     )
     if result.data is None:
         return f"No extraction data were produced for {file_path}"
-    return json.dumps(result.data)
+    return json.dumps(result.data, indent=2)
 
 
 async def classify_file(

@@ -2,7 +2,6 @@ import functools
 import json
 import logging
 import os
-from pathlib import Path
 from typing import cast
 
 import aiofiles
@@ -22,7 +21,7 @@ from workflows_acp.events import (
     ToolResultEvent,
 )
 from workflows_acp.llm_wrapper import LLMWrapper
-from workflows_acp.tools.agentfs import configure_agentfs, load_all_files
+from workflows_acp.tools.agentfs import load_all_files
 from workflows_acp.workflow import AgentWorkflow
 
 from .constants import (
@@ -33,6 +32,7 @@ from .constants import (
     SPECIAL_CHARS,
 )
 from .tools import TOOLS
+from .tools.llamacloud import _download_file_to_agentfs
 
 
 def start(user: User | None) -> str:
@@ -73,7 +73,7 @@ def get_llm() -> LLMWrapper:
         tools=TOOLS,
         api_key=api_key,
         model=model,
-        llm_provider=llm_provider,
+        llm_provider=llm_provider,  # type: ignore[invalid-argument-type]
         agent_task=AGENT_TASK,
     )
 
@@ -91,16 +91,6 @@ def _get_file_name(document: Document) -> str:
         if document.file_name.endswith(".pdf"):
             return document.file_name
         return document.file_name + ".pdf"
-
-
-async def _download_file_to_agentfs(file_path: str, content: bytes) -> str:
-    file_path = str(Path(file_path).resolve())
-    agentfs = await configure_agentfs()
-    try:
-        await agentfs.fs.write_file(file_path, content=content, encoding="utf-8")
-    except Exception as e:
-        return f"There was an error while writing the file: {e}"
-    return "File written with success"
 
 
 async def handle_documents(document: Document, context: CallbackContext) -> str:

@@ -104,6 +104,6 @@ def setup_wizard(
         dot_env.touch()
     set_key(".env", key_to_set="LLAMAGRAM_LLM_PROVIDER", value_to_set=llm_provider)
     set_key(".env", key_to_set="LLAMAGRAM_LLM_MODEL", value_to_set=llm_model)
-    set_key(".env", key_to_set="LLAMAGRAM_API_KEY", value_to_set=api_key)
+    set_key(".env", key_to_set="LLAMAGRAM_LLM_API_KEY", value_to_set=api_key)
     set_key(".env", key_to_set="LLAMA_CLOUD_API_KEY", value_to_set=llama_cloud_api_key)
     set_key(".env", key_to_set="TELEGRAM_BOT_TOKEN", value_to_set=telegram_token)
