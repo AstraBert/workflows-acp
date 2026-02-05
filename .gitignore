@@ -14,6 +14,7 @@ wheels/
 
 # caches
 *_cache/
+.llamagram/
 # memory jsonl file
 .agent_memory.jsonl
 
@@ -22,3 +23,6 @@ wheels/
 
 # agentfs database
 agent.db*
+
+# env variables
+.env

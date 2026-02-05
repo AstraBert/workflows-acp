@@ -27,6 +27,11 @@ wfacp = "workflows_acp.cli:app"
 [tool.uv.build-backend]
 module-name = "workflows_acp"
 
+[tool.uv.workspace]
+members = [
+    "packages/llamagram",
+]
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",

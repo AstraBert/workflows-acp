@@ -1,6 +1,16 @@
 version = 1
 revision = 3
 requires-python = ">=3.11"
+resolution-markers = [
+    "python_full_version >= '3.14'",
+    "python_full_version < '3.14'",
+]
+
+[manifest]
+members = [
+    "llamagram",
+    "workflows-acp",
+]
 
 [[package]]
 name = "agent-client-protocol"
@@ -24,6 +34,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6b/62/c6cb3b68d10e5e74ec9f3ae47a8b1b798a6cc549f330a7d376ee275a7abd/agentfs_sdk-0.4.1.tar.gz", hash = "sha256:b2d03d7d72f5d6610005f8cc60790cae149fb425348d6c19186f67327704c8fe", size = 27563, upload-time = "2026-01-02T19:18:18.235Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/e4/fda3035031ab146a1d344ea1a504b90027934d22b486c198b9bd8e03ac81/agentfs_sdk-0.4.1-py3-none-any.whl", hash = "sha256:b0b625b68273829895679214ee8dcc25ec355bfaf95d7f3694726cd138ce7d1e", size = 19034, upload-time = "2026-01-02T19:18:17.487Z" },
+]
+
+[[package]]
+name = "aiofiles"
+version = "25.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/c3/534eac40372d8ee36ef40df62ec129bee4fdb5ad9706e58a29be53b2c970/aiofiles-25.1.0.tar.gz", hash = "sha256:a8d728f0a29de45dc521f18f07297428d56992a742f0cd2701ba86e44d23d5b2", size = 46354, upload-time = "2025-10-09T20:51:04.358Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bc/8a/340a1555ae33d7354dbca4faa54948d76d89a27ceef032c8c3bc661d003e/aiofiles-25.1.0-py3-none-any.whl", hash = "sha256:abe311e527c862958650f9438e859c1fa7568a141b22abcd015e120e86a85695", size = 14668, upload-time = "2025-10-09T20:51:03.174Z" },
 ]
 
 [[package]]
@@ -360,6 +379,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/49/85/12f0a49a7c4ffb70572b6c2ef13c90c88fd190debda93b23f026b25f9634/deprecated-1.3.1.tar.gz", hash = "sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223", size = 2932523, upload-time = "2025-10-30T08:19:02.757Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl", hash = "sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f", size = 11298, upload-time = "2025-10-30T08:19:00.758Z" },
+]
+
+[[package]]
+name = "diskcache"
+version = "5.6.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/21/1c1ffc1a039ddcc459db43cc108658f32c57d271d7289a2794e401d0fdb6/diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc", size = 67916, upload-time = "2023-08-31T06:12:00.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/27/4570e78fc0bf5ea0ca45eb1de3818a23787af9b390c0b0a0033a1b8236f9/diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19", size = 45550, upload-time = "2023-08-31T06:11:58.822Z" },
 ]
 
 [[package]]
@@ -765,6 +793,23 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-cloud"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/70/f8/4d0797cc509a45901c71d0de53989fb47b90d0e014eb2294afea8e4d5ebb/llama_cloud-1.2.0.tar.gz", hash = "sha256:2db1655ed92f0057a1af6bc5e0ba3b228b4bc877ce9a957bf5b854e6a4ae1d23", size = 2275955, upload-time = "2026-01-30T21:32:27.366Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/ec/033fb749838dab73379726e637bdca720771d54abed49ce228f5022e61e9/llama_cloud-1.2.0-py3-none-any.whl", hash = "sha256:d63858f4e4eadb3d3b955d821e6ec8d055751374778eb792412af834c4a518f0", size = 384907, upload-time = "2026-01-30T21:32:25.695Z" },
+]
+
+[[package]]
 name = "llama-index-instrumentation"
 version = "0.4.2"
 source = { registry = "https://pypi.org/simple" }
@@ -789,6 +834,49 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/95/88/c12313b04837d08321f1424c676e85327e04d35c8eed73a595cc919988e6/llama_index_workflows-2.11.6.tar.gz", hash = "sha256:4b121daea1bc8381fbe5c304562c2b4c7cd87d86cf68e27cc4064a278fe2f882", size = 70807, upload-time = "2025-12-24T15:55:46.222Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/19/07/6db8d3fbe9c4a18b0ad0df35c2bbd1f33026548ca043134f46f2361aa7ea/llama_index_workflows-2.11.6-py3-none-any.whl", hash = "sha256:e19f2183ca0645c5efa2e124cd98db3f4e78a0f9642a00a0b0280a7b3fa589a5", size = 92109, upload-time = "2025-12-24T15:55:45.187Z" },
+]
+
+[[package]]
+name = "llamagram"
+version = "0.1.0"
+source = { editable = "packages/llamagram" }
+dependencies = [
+    { name = "aiofiles" },
+    { name = "diskcache" },
+    { name = "llama-cloud" },
+    { name = "python-dotenv" },
+    { name = "python-telegram-bot" },
+    { name = "random-name" },
+    { name = "workflows-acp" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+    { name = "ty" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiofiles", specifier = ">=25.1.0" },
+    { name = "diskcache", specifier = ">=5.6.3" },
+    { name = "llama-cloud", specifier = ">=1.2.0" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "python-telegram-bot", specifier = ">=22.6" },
+    { name = "random-name", specifier = ">=0.1.1" },
+    { name = "workflows-acp", editable = "." },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
+    { name = "ruff", specifier = ">=0.14.10" },
+    { name = "ty", specifier = ">=0.0.8" },
 ]
 
 [[package]]
@@ -1329,6 +1417,19 @@ wheels = [
 ]
 
 [[package]]
+name = "python-telegram-bot"
+version = "22.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpcore", marker = "python_full_version >= '3.14'" },
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cd/9b/8df90c85404166a6631e857027866263adb27440d8af1dbeffbdc4f0166c/python_telegram_bot-22.6.tar.gz", hash = "sha256:50ae8cc10f8dff01445628687951020721f37956966b92a91df4c1bf2d113742", size = 1503761, upload-time = "2026-01-24T13:57:00.269Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/97/7298f0e1afe3a1ae52ff4c5af5087ed4de319ea73eb3b5c8c4dd4e76e708/python_telegram_bot-22.6-py3-none-any.whl", hash = "sha256:e598fe171c3dde2dfd0f001619ee9110eece66761a677b34719fb18934935ce0", size = 737267, upload-time = "2026-01-24T13:56:58.06Z" },
+]
+
+[[package]]
 name = "pyturso"
 version = "0.4.0rc17"
 source = { registry = "https://pypi.org/simple" }
@@ -1421,6 +1522,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f0/7a/1c7270340330e575b92f397352af856a8c06f230aa3e76f86b39d01b416a/pyyaml-6.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4ad1906908f2f5ae4e5a8ddfce73c320c2a1429ec52eafd27138b7f1cbe341c9", size = 174062, upload-time = "2025-09-25T21:32:55.767Z" },
     { url = "https://files.pythonhosted.org/packages/f1/12/de94a39c2ef588c7e6455cfbe7343d3b2dc9d6b6b2f40c4c6565744c873d/pyyaml-6.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:ebc55a14a21cb14062aa4162f906cd962b28e2e9ea38f9b4391244cd8de4ae0b", size = 149341, upload-time = "2025-09-25T21:32:56.828Z" },
 ]
+
+[[package]]
+name = "random-name"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6d/95/d74dac4e47a0e50471b65a21301af3320116715891bf8736f48d02847bc6/random_name-0.1.1.tar.gz", hash = "sha256:9905292851b2adceabccafd8998e59acbe3a88e59ac2bd81f8fd9225bd46843b", size = 4671, upload-time = "2017-08-25T01:03:53.927Z" }
 
 [[package]]
 name = "referencing"

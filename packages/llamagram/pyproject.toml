@@ -1,0 +1,34 @@
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "llamagram"
+version = "0.1.0-beta"
+description = "Background AI assistant working as a Telegram bot, built specifically for document-related use cases"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiofiles>=25.1.0",
+    "diskcache>=5.6.3",
+    "llama-cloud>=1.2.0,<1.3",
+    "python-dotenv>=1.2.1",
+    "python-telegram-bot>=22.6",
+    "random-name>=0.1.1",
+    "workflows-acp",
+]
+
+[tool.uv.sources]
+workflows-acp = {workspace = true}
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.10",
+    "ty>=0.0.8",
+]
+
+[project.scripts]
+llamagram = "llamagram.cli:app"
