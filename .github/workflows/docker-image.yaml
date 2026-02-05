@@ -2,8 +2,8 @@ name: Build and Publish Docker Image
 
 on:
   push:
-    # tags: ["lobsterx@v*.*.*"]
-    branches: [master] # avoid publishing for the first time
+    tags: ["lobsterx@v*.*.*"]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
