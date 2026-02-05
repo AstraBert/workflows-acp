@@ -17,7 +17,7 @@ Install the bot natively:
 
 ```bash
 # uv (recommended)
-uv tool install llamagram 
+uv tool install llamagram --prerelease=allow
 # pip
 pip install llamagram
 ```
