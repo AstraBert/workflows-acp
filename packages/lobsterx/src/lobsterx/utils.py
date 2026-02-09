@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+import mimetypes
 import os
 from typing import cast
 
@@ -85,12 +86,15 @@ def get_workflow() -> AgentWorkflow:
 
 
 def _get_file_name(document: Document) -> str:
+    extension = (
+        mimetypes.guess_extension(document.mime_type or "application/pdf") or ".pdf"
+    )
     if document.file_name is None:
-        return generate_name() + ".pdf"
+        return generate_name() + extension
     else:
-        if document.file_name.endswith(".pdf"):
+        if document.file_name.endswith(extension):
             return document.file_name
-        return document.file_name + ".pdf"
+        return document.file_name + extension
 
 
 async def handle_documents(document: Document, context: CallbackContext) -> str:

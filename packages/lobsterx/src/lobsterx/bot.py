@@ -91,6 +91,12 @@ async def run_bot(log_level: str) -> None:
         application.add_handler(
             MessageHandler(filters.Document.PDF, handle_documents_tg)
         )
+        application.add_handler(
+            MessageHandler(filters.Document.DOCX, handle_documents_tg)
+        )
+        application.add_handler(
+            MessageHandler(filters.Document.TXT, handle_documents_tg)
+        )
         application.add_handler(MessageHandler(filters.TEXT, handle_prompt_tg))
         application.add_error_handler(cast(HandlerCallback, error_handler))
         if application.updater is not None:

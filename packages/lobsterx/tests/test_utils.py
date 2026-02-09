@@ -4,6 +4,13 @@ from typing import cast
 from unittest.mock import Mock, patch
 
 import pytest
+from telegram import Document, User
+from telegram.ext import CallbackContext
+from workflows_acp.llm_wrapper import LLMWrapper
+from workflows_acp.llms.openai_llm import OpenAILLM
+from workflows_acp.tools.agentfs import load_all_files
+from workflows_acp.workflow import AgentWorkflow
+
 from lobsterx.constants import (
     DATA_DIR,
     DEFAULT_TO_AVOID,
@@ -23,12 +30,6 @@ from lobsterx.utils import (
     handle_prompt,
     start,
 )
-from telegram import Document, User
-from telegram.ext import CallbackContext
-from workflows_acp.llm_wrapper import LLMWrapper
-from workflows_acp.llms.openai_llm import OpenAILLM
-from workflows_acp.tools.agentfs import load_all_files
-from workflows_acp.workflow import AgentWorkflow
 
 from .conftest import (
     AgentWorkflowMock,
@@ -79,7 +80,10 @@ async def test_handle_documents_success(
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     document = cast(
-        Document, TelegramDocumentMock(file_name="hello.pdf", file_id="123")
+        Document,
+        TelegramDocumentMock(
+            file_name="hello.pdf", file_id="123", mime_type="application/pdf"
+        ),
     )
     callback_context = cast(CallbackContext, TelegramCallBackContextMock())
     result = await handle_documents(document, callback_context)
@@ -87,6 +91,93 @@ async def test_handle_documents_success(
     assert (
         result
         == f"Your file has been successfully downloaded at: {path}. Use this path to reference the file in your follow-up requests to the agent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_documents_no_name_mimetype(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "test.txt").write_text("Hello world")
+    await load_all_files(
+        to_avoid_dirs=DEFAULT_TO_AVOID,
+        to_avoid_files=DEFAULT_TO_AVOID_FILES,
+    )
+    document = cast(
+        Document,
+        TelegramDocumentMock(
+            file_name=None,
+            file_id="123",
+            mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ),
+    )
+    callback_context = cast(CallbackContext, TelegramCallBackContextMock())
+    result = await handle_documents(document, callback_context)
+    assert (
+        result.startswith("Your file has been successfully downloaded at: ")
+        and result.endswith(
+            ". Use this path to reference the file in your follow-up requests to the agent"
+        )
+        and ".docx" in result
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_documents_no_name_no_mimetype(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "test.txt").write_text("Hello world")
+    await load_all_files(
+        to_avoid_dirs=DEFAULT_TO_AVOID,
+        to_avoid_files=DEFAULT_TO_AVOID_FILES,
+    )
+    document = cast(
+        Document,
+        TelegramDocumentMock(
+            file_name=None,
+            file_id="123",
+            mime_type=None,
+        ),
+    )
+    callback_context = cast(CallbackContext, TelegramCallBackContextMock())
+    result = await handle_documents(document, callback_context)
+    assert (
+        result.startswith("Your file has been successfully downloaded at: ")
+        and result.endswith(
+            ". Use this path to reference the file in your follow-up requests to the agent"
+        )
+        and ".pdf" in result
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_documents_no_extension(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "test.txt").write_text("Hello world")
+    await load_all_files(
+        to_avoid_dirs=DEFAULT_TO_AVOID,
+        to_avoid_files=DEFAULT_TO_AVOID_FILES,
+    )
+    document = cast(
+        Document,
+        TelegramDocumentMock(
+            file_name="file",
+            file_id="123",
+            mime_type="text/plain",
+        ),
+    )
+    callback_context = cast(CallbackContext, TelegramCallBackContextMock())
+    result = await handle_documents(document, callback_context)
+    assert (
+        result.startswith("Your file has been successfully downloaded at: ")
+        and result.endswith(
+            ". Use this path to reference the file in your follow-up requests to the agent"
+        )
+        and "file.txt" in result
     )
 
 
@@ -101,7 +192,10 @@ async def test_handle_documents_fail(
         to_avoid_files=DEFAULT_TO_AVOID_FILES,
     )
     document = cast(
-        Document, TelegramDocumentMock(file_name="hello.pdf", file_id="123")
+        Document,
+        TelegramDocumentMock(
+            file_name="hello.pdf", file_id="123", mime_type="application/pdf"
+        ),
     )
     callback_context = cast(
         CallbackContext, TelegramCallBackContextMock(should_fail=True)
