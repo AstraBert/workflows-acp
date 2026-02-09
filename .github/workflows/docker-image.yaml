@@ -2,8 +2,8 @@ name: Build and Publish Docker Image
 
 on:
   push:
-    tags: ["lobsterx@v*.*.*"]
     branches: [main]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
