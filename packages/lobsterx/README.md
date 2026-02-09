@@ -1,4 +1,4 @@
-# LobsterX
+# LobsterX🦞
 
 LobsterX is an AI agent inspired by [OpenClaw](https://openclaw.ai) (formerly known as MoltBot or ClawdBot), which focuses on document-related tasks.
 
@@ -58,6 +58,8 @@ lobsterx setup --provider google \
 ```
 
 This will create a `.env` file with the necessary variables, which will be loaded by LobsterX at runtime (make sure not to share it with anyone).
+
+If you wish to further customize the instructions that LobsterX has access to, you can use an **AGENTS.md** file, saved under the same directory where the agent process is running.
 
 ## Run
 
