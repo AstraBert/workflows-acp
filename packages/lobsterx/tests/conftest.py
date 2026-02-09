@@ -59,6 +59,7 @@ class TelegramUserMock:
 class TelegramDocumentMock:
     file_name: str | None
     file_id: str
+    mime_type: str | None
 
 
 class ParsingMock:

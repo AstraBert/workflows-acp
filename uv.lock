@@ -838,7 +838,7 @@ wheels = [
 
 [[package]]
 name = "lobsterx"
-version = "0.1.0b0"
+version = "0.1.1b0"
 source = { editable = "packages/lobsterx" }
 dependencies = [
     { name = "aiofiles" },
