@@ -1,6 +1,6 @@
+import glob
 import os
 import re
-import glob
 
 
 def describe_dir_content(directory: str) -> str:
@@ -26,6 +26,7 @@ def describe_dir_content(directory: str) -> str:
             files.append(fullpath)
         else:
             directories.append(fullpath)
+    files = sorted(files)
     description += "FILES:\n- " + "\n- ".join(files)
     if not directories:
         description += "\nThis folder does not have any sub-folders"

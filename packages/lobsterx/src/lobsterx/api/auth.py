@@ -39,7 +39,7 @@ class LobsterXAuthentication(AuthenticationBackend):
     ) -> tuple[AuthCredentials, BaseUser] | None:
         auth_header = conn.headers.get("Authorization", None)
         if auth_header is None:
-            raise AuthenticationError("No authentication header in request")
+            raise AuthenticationError("No authorization header in request")
         matches = get_auth_header_pattern().findall(auth_header)
         try:
             assert len(matches) == 1, "Should only provide one bearer token"

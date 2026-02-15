@@ -1,12 +1,16 @@
 import asyncio
+from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated, Literal
 
+import uvicorn
 from dotenv import set_key
 from rich.prompt import Prompt
 from typer import Option, Typer
 from workflows_acp.constants import AVAILABLE_MODELS
 
+from .api.api import create_api_app
+from .api.shared import LobsterXApiConfig
 from .bot import run_bot
 from .constants import LOG_LEVELS
 
@@ -107,3 +111,89 @@ def setup_wizard(
     set_key(".env", key_to_set="LOBSTERX_LLM_API_KEY", value_to_set=api_key)
     set_key(".env", key_to_set="LLAMA_CLOUD_API_KEY", value_to_set=llama_cloud_api_key)
     set_key(".env", key_to_set="TELEGRAM_BOT_TOKEN", value_to_set=telegram_token)
+
+
+@app.command(name="serve", help="Run LobsterX as an API server.")
+def serve(
+    host: Annotated[
+        str,
+        Option(
+            "--bind",
+            "-b",
+            help="Host to bind the server to. Defaults to 0.0.0.0",
+        ),
+    ] = "0.0.0.0",
+    port: Annotated[
+        int,
+        Option(
+            "--port",
+            "-p",
+            help="Port to bind the server to. Defaults to 8000",
+        ),
+    ] = 8000,
+    allow_origins: Annotated[
+        list[str],
+        Option(
+            "--allow",
+            "-a",
+            help="Origins to be allowed for CORS",
+        ),
+    ] = [],
+    file_downloads_per_minute: Annotated[
+        int | None,
+        Option(
+            "--file-downloads-per-minute",
+            "-a",
+            help="Rate limit (per minute) on file downloads. Defaults to 300.",
+        ),
+    ] = None,
+    create_tasks_per_minute: Annotated[
+        int | None,
+        Option(
+            "--create-tasks-per-minute",
+            help="Rate limit (per minute) on task creation. Defaults to 60.",
+        ),
+    ] = None,
+    delete_tasks_per_minute: Annotated[
+        int | None,
+        Option(
+            "--delete-tasks-per-minute",
+            help="Rate limit (per minute) on task cancellation. Defaults to 60.",
+        ),
+    ] = None,
+    poll_tasks_per_minute: Annotated[
+        int | None,
+        Option(
+            "--poll-tasks-per-minute",
+            help="Rate limit (per minute) on polling tasks for completion. Defaults to 300.",
+        ),
+    ] = None,
+    server_api_key: Annotated[
+        str | None,
+        Option(
+            "--server-key",
+            help="API key to be used within the server to authorize requests. Reads from LOBSTERX_SERVER_KEY env variable if not provided.",
+        ),
+    ] = None,
+    config_file: Annotated[
+        str | None,
+        Option(
+            "--config",
+            "-c",
+            help="Config file from which to read the LobsterX server configuration.",
+        ),
+    ] = None,
+) -> None:
+    if config_file is not None:
+        args = LobsterXApiConfig.load_from_config(config_file)
+        app = create_api_app(**asdict(args))
+    else:
+        app = create_api_app(
+            allow_origins=allow_origins,
+            create_tasks_per_minute=create_tasks_per_minute,
+            delete_tasks_per_minute=delete_tasks_per_minute,
+            poll_tasks_per_minute=poll_tasks_per_minute,
+            file_downloads_per_minute=file_downloads_per_minute,
+            server_api_key=server_api_key,
+        )
+    uvicorn.run(app, host=host, port=port)

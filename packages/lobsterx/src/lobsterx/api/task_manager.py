@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import uuid
 from dataclasses import dataclass
 from enum import Enum
@@ -56,3 +57,8 @@ class InMemoryTaskManager:
         except asyncio.CancelledError:
             self._tasks.pop(id_)
             return None
+
+
+@functools.lru_cache(maxsize=1)
+def get_task_manager() -> InMemoryTaskManager:
+    return InMemoryTaskManager()
