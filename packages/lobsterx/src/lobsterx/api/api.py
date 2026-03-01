@@ -1,13 +1,11 @@
 import asyncio
 import mimetypes
 import os
-from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.datastructures import UploadFile
 from fastapi.param_functions import Depends, File
 from fastapi_throttle import RateLimiter
-from pydantic import BaseModel
 from random_name import generate_name
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import CORSMiddleware
@@ -16,30 +14,20 @@ from starlette.responses import JSONResponse
 from ..constants import DATA_DIR
 from ..utils import _download_file_to_agentfs, handle_prompt
 from .auth import LobsterXAuthentication, on_auth_error
-from .shared import get_server_key_from_env, validate_api_key
-from .task_manager import StatusEnum, TaskRepr, get_task_manager
+from .shared import (
+    GetTaskResponse,
+    TaskRequest,
+    TaskResponse,
+    UploadFileResponse,
+    get_server_key_from_env,
+    validate_api_key,
+)
+from .task_manager import get_task_manager
 
 DEFAULT_FILE_DOWNLOADS_PER_MINUTE = 300
 DEFAULT_TASKS_PER_MINUTE = 60
 DEFAULT_DELETE_TASKS_PER_MINUTE = 60
 DEFAULT_POLL_TASKS_PER_MINUTE = 300
-
-
-class TaskRequest(BaseModel):
-    prompt: str
-
-
-class TaskResponse(BaseModel):
-    task_id: str
-
-
-class GetTaskResponse(BaseModel):
-    status: StatusEnum
-    output: Any | None = None
-
-    @classmethod
-    def from_dataclass(cls, task_repr: TaskRepr) -> "GetTaskResponse":
-        return cls(status=task_repr.status, output=task_repr.output)
 
 
 def _get_file_name(document: UploadFile) -> str:
@@ -102,11 +90,12 @@ def create_api_app(
     )
     async def download_file(
         file: UploadFile = File(...),
-    ) -> None:
+    ) -> UploadFileResponse:
         file_name = _get_file_name(file)
         file_content = await file.read()
         path = os.path.join(DATA_DIR, file_name)
         await _download_file_to_agentfs(path, file_content)
+        return UploadFileResponse(new_file_path=path)
 
     @app.post(
         "/tasks",
@@ -115,7 +104,7 @@ def create_api_app(
     async def create_task(request: TaskRequest) -> TaskResponse:
         task_manager = get_task_manager()
         task = asyncio.create_task(handle_prompt(request.prompt))
-        task_id = task_manager.add_task(task)
+        task_id = await task_manager.add_task(task)
         return TaskResponse(task_id=task_id)
 
     @app.delete(

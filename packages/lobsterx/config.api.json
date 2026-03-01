@@ -1,0 +1,9 @@
+{
+  "allow_origins": [],
+  "file_downloads_per_minute": 300,
+  "create_tasks_per_minute": 60,
+  "delete_tasks_per_minute": 60,
+  "poll_tasks_per_minute": 300,
+  "host": "0.0.0.0",
+  "port": 9000
+}
