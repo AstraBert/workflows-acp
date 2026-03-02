@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "lobsterx"
-version = "0.1.1-beta"
+version = "0.2.0-beta"
 description = "Background AI assistant working as a Telegram bot, built specifically for document-related use cases"
 readme = "README.md"
 requires-python = ">=3.11"
