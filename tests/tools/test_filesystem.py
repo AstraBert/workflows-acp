@@ -1,13 +1,13 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 from workflows_acp.tools.filesystem import (
     describe_dir_content,
-    read_file,
-    grep_file_content,
-    glob_paths,
-    write_file,
     edit_file,
+    glob_paths,
+    grep_file_content,
+    read_file,
+    write_file,
 )
 
 
@@ -15,7 +15,7 @@ def test_describe_dir_content() -> None:
     description = describe_dir_content("tests/testfiles")
     assert (
         description
-        == "Content of tests/testfiles\nFILES:\n- tests/testfiles/file1.txt\n- tests/testfiles/agent_config.yaml\n- tests/testfiles/file2.md\nSUBFOLDERS:\n- tests/testfiles/last"
+        == "Content of tests/testfiles\nFILES:\n- tests/testfiles/agent_config.yaml\n- tests/testfiles/file1.txt\n- tests/testfiles/file2.md\nSUBFOLDERS:\n- tests/testfiles/last"
     )
     description = describe_dir_content("tests/testfile")
     assert description == "No such directory: tests/testfile"
