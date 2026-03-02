@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pytest
 from dotenv import dotenv_values
-from lobsterx.cli import app
 from typer.testing import CliRunner
+
+from lobsterx.cli import app
 
 runner = CliRunner()
 
@@ -21,6 +22,8 @@ def test_setup_command_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
             "--telegram-token",
             "tok",
             "--no-interactive",
+            "--server-key",
+            "key",
         ],
     )
     assert (tmp_path / ".env").is_file()
@@ -31,6 +34,7 @@ def test_setup_command_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     assert data["LOBSTERX_LLM_API_KEY"] == "secret-key"
     assert data["LLAMA_CLOUD_API_KEY"] == "llama-cloud-key"
     assert data["TELEGRAM_BOT_TOKEN"] == "tok"
+    assert data["LOBSTERX_SERVER_KEY"] == "key"
 
 
 def test_setup_command_custom(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -49,6 +53,8 @@ def test_setup_command_custom(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             "llama-cloud-key",
             "--telegram-token",
             "tok",
+            "--server-key",
+            "key",
             "--no-interactive",
         ],
     )
@@ -60,3 +66,4 @@ def test_setup_command_custom(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert data["LOBSTERX_LLM_API_KEY"] == "secret-key"
     assert data["LLAMA_CLOUD_API_KEY"] == "llama-cloud-key"
     assert data["TELEGRAM_BOT_TOKEN"] == "tok"
+    assert data["LOBSTERX_SERVER_KEY"] == "key"
