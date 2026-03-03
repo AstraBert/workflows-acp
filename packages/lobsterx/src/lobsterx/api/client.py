@@ -1,4 +1,6 @@
+import asyncio
 import os
+import sys
 from mimetypes import guess_type
 from typing import Literal
 
@@ -81,3 +83,38 @@ class LobsterXClient:
         ) as client:
             response = await client.delete(f"/tasks/{task_id}")
             response.raise_for_status()
+
+    async def poll_for_task(
+        self,
+        task_id: str,
+        polling_interval: float = 2.0,
+        max_attempts: int = 900,  # 30 minutes
+        verbose: bool = True,
+    ) -> GetTaskResponse | None:
+        attempts = 0
+        async with AsyncClient(
+            base_url=self.base_url,
+            headers={"Authorization": f"Bearer {self.api_key}"},
+            timeout=600,
+        ) as client:
+            while True:
+                attempts += 1
+                response = await client.get(f"/tasks/{task_id}")
+                response.raise_for_status()
+                json_response = response.json()
+                validated = GetTaskResponse.model_validate(json_response)
+                if validated.status.value == "pending" and attempts < max_attempts:
+                    if verbose:
+                        print(
+                            f"Attempt {attempts}: Task still pending...",
+                            file=sys.stderr,
+                        )
+                    await asyncio.sleep(polling_interval)
+                elif validated.status.value == "pending" and attempts >= max_attempts:
+                    print(
+                        "Maximum number of attempts reached, exiting...",
+                        file=sys.stderr,
+                    )
+                    return
+                else:
+                    return validated
