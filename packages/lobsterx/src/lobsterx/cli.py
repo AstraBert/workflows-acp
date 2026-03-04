@@ -15,6 +15,7 @@ from .api.client import LobsterXClient
 from .api.shared import LobsterXApiConfig
 from .bot import run_bot
 from .constants import LOG_LEVELS
+from .utils import _setup_agentfs
 
 app = Typer()
 
@@ -215,6 +216,7 @@ def serve(
             file_downloads_per_minute=file_downloads_per_minute,
             server_api_key=server_api_key,
         )
+    asyncio.run(_setup_agentfs(with_print=True))
     uvicorn.run(app, host=host, port=port)
 
 
