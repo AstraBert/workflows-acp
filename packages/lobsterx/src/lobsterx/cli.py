@@ -15,6 +15,7 @@ from .api.client import LobsterXClient
 from .api.shared import LobsterXApiConfig
 from .bot import run_bot
 from .constants import LOG_LEVELS
+from .utils import _setup_agentfs
 
 app = Typer()
 
@@ -161,7 +162,6 @@ def serve(
         int | None,
         Option(
             "--file-downloads-per-minute",
-            "-a",
             help="Rate limit (per minute) on file downloads. Defaults to 300.",
         ),
     ] = None,
@@ -216,6 +216,7 @@ def serve(
             file_downloads_per_minute=file_downloads_per_minute,
             server_api_key=server_api_key,
         )
+    asyncio.run(_setup_agentfs(with_print=True))
     uvicorn.run(app, host=host, port=port)
 
 
@@ -407,7 +408,114 @@ def get_task(
         )
         rprint(
             Markdown(
-                f"## Final Outout\n\n{final_output}\n\n## Activity Report\n\n{report}"
+                f"## Final Output\n\n{final_output}\n\n## Activity Report\n\n{report}"
+            )
+        )
+
+
+@app.command(
+    name="wait-task",
+    help="Poll for a task until it is completed.",
+)
+def wait_task(
+    task_id: str,
+    protocol: Annotated[
+        Literal["http", "https"],
+        Option(
+            "--protocol",
+            "-t",
+            help="Protocol for the connection. Defaults to 'http'.",
+        ),
+    ] = "http",
+    host: Annotated[
+        str,
+        Option(
+            "--bind",
+            "-b",
+            help="Host to bind the server to. Defaults to 0.0.0.0",
+        ),
+    ] = "0.0.0.0",
+    port: Annotated[
+        int,
+        Option(
+            "--port",
+            "-p",
+            help="Port to bind the server to. Defaults to 8000",
+        ),
+    ] = 8000,
+    polling_interval: Annotated[
+        float,
+        Option(
+            "--polling-interval",
+            "-i",
+            help="Interval (in seconds) between a polling request and the following one. Defaults to 2 seconds.",
+        ),
+    ] = 2.0,
+    max_attempts: Annotated[
+        int,
+        Option(
+            "--max-attempts",
+            "-m",
+            help="Maximum number of polling attempts. Defaults to 900 (for a total of 30 minutes with the default polling interval).",
+        ),
+    ] = 900,
+    server_api_key: Annotated[
+        str | None,
+        Option(
+            "--server-key",
+            help="API key to be used within the server to authorize requests. Reads from LOBSTERX_SERVER_KEY env variable if not provided.",
+        ),
+    ] = None,
+    config_file: Annotated[
+        str | None,
+        Option(
+            "--config",
+            "-c",
+            help="Config file from which to read the LobsterX server configuration. Configured options have precedence over CLI.",
+        ),
+    ] = None,
+    verbose: Annotated[
+        bool,
+        Option(
+            "--verbose/--no-verbose",
+            help="Whether or not to enable verbose logging.",
+        ),
+    ] = True,
+) -> None:
+    if config_file is not None:
+        args = LobsterXApiConfig.load_from_config(config_file)
+        port = args.port or port
+        host = args.host or host
+        protocol = args.protocol or protocol
+    client = LobsterXClient(
+        api_key=server_api_key, host=host, port=port, protocol=protocol
+    )
+    response = asyncio.run(
+        client.poll_for_task(
+            task_id,
+            polling_interval=polling_interval,
+            max_attempts=max_attempts,
+            verbose=verbose,
+        )
+    )
+    if response is None:
+        return
+    if response.status.value in ("cancelled", "failed"):
+        rprint(f"[bold red]Task {task_id} was cancelled or produced an error[/]")
+        if response.error is not None:
+            rprint(f"[bold red]Error: {response.error}[/]")
+    elif response.status.value == "pending":
+        rprint(f"[bold cyan]Task {task_id} is still being executed[/]")
+    else:
+        final_output = (
+            response.output[1] if response.output is not None else "No final output"
+        )
+        report = (
+            response.output[0] if response.output is not None else "No activity report"
+        )
+        rprint(
+            Markdown(
+                f"## Final Output\n\n{final_output}\n\n## Activity Report\n\n{report}"
             )
         )
 

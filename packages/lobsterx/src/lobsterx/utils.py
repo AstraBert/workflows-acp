@@ -3,6 +3,7 @@ import json
 import logging
 import mimetypes
 import os
+import sys
 from typing import cast
 
 import aiofiles
@@ -168,17 +169,37 @@ async def _remove_temporary_report_file(path: str) -> None:
         pass
 
 
-async def _setup_agentfs() -> None:
+async def _setup_agentfs(with_print: bool = False) -> None:
     if not AGENTFS_FILE.exists():
-        logging.info("Loading all files in the current working directory to AgentFS")
+        if not with_print:
+            logging.info(
+                "Loading all files in the current working directory to AgentFS"
+            )
+        else:
+            print(
+                "Loading all files in the current working directory to AgentFS",
+                file=sys.stderr,
+            )
         await load_all_files(DEFAULT_TO_AVOID, DEFAULT_TO_AVOID_FILES, progress=True)
-        logging.info(
-            "Finished loading all files in the current working directory to AgentFS"
-        )
+        if not with_print:
+            logging.info(
+                "Finished loading all files in the current working directory to AgentFS"
+            )
+        else:
+            print(
+                "Finished loading all files in the current working directory to AgentFS",
+                file=sys.stderr,
+            )
     else:
-        logging.info(
-            f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files."
-        )
+        if not with_print:
+            logging.info(
+                f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files."
+            )
+        else:
+            print(
+                f"Detected {str(AGENTFS_FILE)} in current working directory, will not load files.",
+                file=sys.stderr,
+            )
 
 
 def _escape_markdow_for_tg(markdown: str) -> str:
