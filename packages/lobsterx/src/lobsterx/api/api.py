@@ -12,7 +12,11 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from ..constants import DATA_DIR
-from ..utils import _download_file_to_agentfs, handle_prompt
+from ..utils import (
+    _download_file_to_agentfs,
+    _unique_agentfs_path,
+    handle_prompt,
+)
 from .auth import LobsterXAuthentication, on_auth_error
 from .shared import (
     GetTaskResponse,
@@ -36,10 +40,10 @@ def _get_file_name(document: UploadFile) -> str:
     )
     if document.filename is None:
         return generate_name() + extension
-    else:
-        if document.filename.endswith(extension):
-            return document.filename
-        return document.filename + extension
+    filename = os.path.basename(document.filename)
+    if filename.endswith(extension):
+        return filename
+    return filename + extension
 
 
 def create_api_app(
@@ -93,7 +97,7 @@ def create_api_app(
     ) -> UploadFileResponse:
         file_name = _get_file_name(file)
         file_content = await file.read()
-        path = os.path.join(DATA_DIR, file_name)
+        path = await _unique_agentfs_path(os.path.join(DATA_DIR, file_name))
         await _download_file_to_agentfs(path, file_content)
         return UploadFileResponse(new_file_path=path)
 
