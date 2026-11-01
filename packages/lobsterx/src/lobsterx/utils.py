@@ -92,10 +92,10 @@ def _get_file_name(document: Document) -> str:
     )
     if document.file_name is None:
         return generate_name() + extension
-    else:
-        if document.file_name.endswith(extension):
-            return document.file_name
-        return document.file_name + extension
+    file_name = os.path.basename(document.file_name)
+    if file_name.endswith(extension):
+        return file_name
+    return file_name + extension
 
 
 async def handle_documents(document: Document, context: CallbackContext) -> str:

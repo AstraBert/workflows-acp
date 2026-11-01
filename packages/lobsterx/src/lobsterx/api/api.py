@@ -36,10 +36,10 @@ def _get_file_name(document: UploadFile) -> str:
     )
     if document.filename is None:
         return generate_name() + extension
-    else:
-        if document.filename.endswith(extension):
-            return document.filename
-        return document.filename + extension
+    filename = os.path.basename(document.filename)
+    if filename.endswith(extension):
+        return filename
+    return filename + extension
 
 
 def create_api_app(
