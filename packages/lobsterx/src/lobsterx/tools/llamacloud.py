@@ -39,6 +39,24 @@ async def _read_file_from_agentfs(file_path: str) -> bytes:
     return content if isinstance(content, bytes) else content.encode("utf-8")
 
 
+async def _unique_agentfs_path(file_path: str) -> str:
+    # Colliding uploads must not overwrite each other.
+    file_path = str(Path(file_path).resolve())
+    agentfs = await configure_agentfs()
+    stem, suffix = os.path.splitext(file_path)
+    candidate = file_path
+    counter = 1
+    while True:
+        try:
+            exists = await _is_accessible_path(agentfs, candidate, "file")
+        except Exception:
+            return file_path
+        if not exists:
+            return candidate
+        candidate = f"{stem}-{counter}{suffix}"
+        counter += 1
+
+
 async def _download_file_to_agentfs(file_path: str, content: bytes) -> str:
     file_path = str(Path(file_path).resolve())
     agentfs = await configure_agentfs()

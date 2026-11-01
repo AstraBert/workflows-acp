@@ -34,7 +34,7 @@ from .constants import (
     SPECIAL_CHARS,
 )
 from .tools import TOOLS
-from .tools.llamacloud import _download_file_to_agentfs
+from .tools.llamacloud import _download_file_to_agentfs, _unique_agentfs_path
 
 
 def start(user: User | None) -> str:
@@ -104,6 +104,7 @@ async def handle_documents(document: Document, context: CallbackContext) -> str:
     try:
         fl = cast(File, await context.bot.get_file(document.file_id))
         ba = await fl.download_as_bytearray()
+        path = await _unique_agentfs_path(path)
         await _download_file_to_agentfs(path, bytes(ba))
     except Exception as e:
         logging.error(str(e))
